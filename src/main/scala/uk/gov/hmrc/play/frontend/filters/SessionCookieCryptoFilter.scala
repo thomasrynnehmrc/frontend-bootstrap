@@ -27,8 +27,8 @@ object SessionCookieCryptoFilter extends CookieCryptoFilter {
   override protected val encrypter = encrypt _
   override protected val decrypter = decrypt _
 
-  private def encrypt(plainCookie: String): String = crypto.encrypt(PlainText(plainCookie)).value
+  def encrypt(plainCookie: String): String = crypto.encrypt(PlainText(plainCookie)).value
 
-  private def decrypt(encryptedCookie: String): String = crypto.decrypt(Crypted(encryptedCookie)).value
+  def decrypt(encryptedCookie: String): String = crypto.decrypt(Crypted(encryptedCookie)).value
 
 }
