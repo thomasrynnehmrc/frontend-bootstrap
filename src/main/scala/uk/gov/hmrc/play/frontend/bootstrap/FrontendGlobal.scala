@@ -25,9 +25,10 @@ import uk.gov.hmrc.play.audit.http.config.ErrorAuditingSettings
 import uk.gov.hmrc.play.filters.frontend.{CSRFExceptionsFilter, HeadersFilter}
 import uk.gov.hmrc.play.filters.{CacheControlFilter, RecoveryFilter}
 import uk.gov.hmrc.play.frontend.bootstrap.Routing.RemovingOfTrailingSlashes
-import uk.gov.hmrc.play.frontend.filters.SessionCookieCryptoFilter
+import uk.gov.hmrc.play.frontend.filters.{DeviceIdCookieFilter, SessionCookieCryptoFilter}
 import uk.gov.hmrc.play.graphite.GraphiteConfig
 import uk.gov.hmrc.play.http.logging.filters.FrontendLoggingFilter
+import uk.gov.hmrc.play.filters.frontend.DeviceIdFilter
 
 trait FrontendFilters {
 
@@ -37,10 +38,13 @@ trait FrontendFilters {
 
   def metricsFilter: MetricsFilter = MetricsFilter
 
+  def deviceIdFilter : DeviceIdFilter
+
   protected lazy val defaultFrontendFilters: Seq[EssentialFilter] = Seq(
     metricsFilter,
     HeadersFilter,
     SessionCookieCryptoFilter,
+    deviceIdFilter,
     loggingFilter,
     frontendAuditFilter,
     CSRFExceptionsFilter,
@@ -63,13 +67,14 @@ abstract class DefaultFrontendGlobal
 
   lazy val appName = Play.current.configuration.getString("appName").getOrElse("APP NAME NOT SET")
 
+  override lazy val deviceIdFilter = DeviceIdCookieFilter(appName, auditConnector)
+
   override def onStart(app: Application) {
     Logger.info(s"Starting frontend : $appName : in mode : ${app.mode}")
     super.onStart(app)
   }
 
-  override def doFilter(a: EssentialAction): EssentialAction = {
-    Filters(super.doFilter(a), frontendFilters: _*)
-  }
+  override def doFilter(a: EssentialAction): EssentialAction =
+    Filters(super.doFilter(a), frontendFilters: _* )
 
 }
