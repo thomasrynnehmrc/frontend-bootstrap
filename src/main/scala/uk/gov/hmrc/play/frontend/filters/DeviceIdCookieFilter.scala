@@ -23,13 +23,16 @@ import uk.gov.hmrc.play.filters.frontend.DeviceIdFilter
 
 class DeviceIdCookieFilter(val appName: String, val auditConnector: AuditConnector) extends DeviceIdFilter {
 
-  final val configId = "cookie.deviceId.secret"
+  final val currentSecret = "cookie.deviceId.secret"
+  final val previousSecret = "cookie.deviceId.previous.secret"
   final val message = "Missing required configuration entry for deviceIdFilter :"
 
-  override lazy val secret: String = Play.configuration.getString(configId).getOrElse {
-    Logger.error(s"$message $configId")
-    throw new SecurityException(s"$message $configId")
+  override lazy val secret: String = Play.configuration.getString(currentSecret).getOrElse {
+    Logger.error(s"$message $currentSecret")
+    throw new SecurityException(s"$message $currentSecret")
   }
+
+  override lazy val previousSecrets = Play.current.configuration.getStringSeq(previousSecret).getOrElse(Seq.empty)
 
 }
 
