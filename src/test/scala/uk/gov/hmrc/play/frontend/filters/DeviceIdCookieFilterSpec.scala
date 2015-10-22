@@ -33,12 +33,15 @@ import scala.concurrent.Future
 class DeviceIdCookieFilterSpec extends WordSpecLike with Matchers with MockitoSugar with ScalaFutures {
 
   final val theSecret = "some_secret"
+  final val previousSecret = "some_previous_secret"
+  final val previousSecretValues = Seq(previousSecret)
 
   lazy val createDeviceId = new DeviceIdCookie {
     override val secret = theSecret
+    override val previousSecrets = previousSecretValues
   }
 
-  val appConfig = Map("cookie.deviceId.secret" -> theSecret)
+  val appConfig = Map("cookie.deviceId.secret" -> theSecret, "cookie.deviceId.previous.secret" -> previousSecretValues)
 
   val auditConnector = mock[AuditConnector]
 
@@ -66,7 +69,7 @@ class DeviceIdCookieFilterSpec extends WordSpecLike with Matchers with MockitoSu
 
       val deviceIdRequestCookie: Cookie = requestPassedToAction.cookies(DeviceId.MdtpDeviceId)
 
-      val responseDeviceIdCookie = Cookies.decode(response.header.headers(HeaderNames.SET_COOKIE))(0).value
+      val responseDeviceIdCookie = Cookies.decode(response.header.headers(HeaderNames.SET_COOKIE)).head.value
       responseDeviceIdCookie shouldBe deviceIdRequestCookie.value
     }
 
@@ -80,6 +83,21 @@ class DeviceIdCookieFilterSpec extends WordSpecLike with Matchers with MockitoSu
       val deviceIdRequestCookie: Cookie = requestPassedToAction.cookies(DeviceId.MdtpDeviceId)
 
       deviceIdRequestCookie.value shouldBe deviceId.value
+      response.header.headers shouldBe Map.empty
+    }
+
+    "successfully decode a deviceId generated from a previous secret" in new WithApplication(FakeApplication(additionalConfiguration = appConfig)) with Setup {
+
+      val uuid = createDeviceId.generateUUID
+      val timestamp = createDeviceId.getTimeStamp
+      val deviceIdMadeFromPrevKey = DeviceId(uuid, Some(timestamp), DeviceId.generateHash(uuid, Some(timestamp), previousSecret))
+      val cookieDeviceIdPrevious = createDeviceId.makeCookie(deviceIdMadeFromPrevKey)
+      val incomingRequest = FakeRequest().withCookies(cookieDeviceIdPrevious)
+
+      val response = DeviceIdCookieFilter("someapp",auditConnector)(action)(incomingRequest).futureValue
+      val deviceIdRequestCookie: Cookie = requestPassedToAction.cookies(DeviceId.MdtpDeviceId)
+
+      deviceIdRequestCookie.value shouldBe cookieDeviceIdPrevious.value
       response.header.headers shouldBe Map.empty
     }
 
