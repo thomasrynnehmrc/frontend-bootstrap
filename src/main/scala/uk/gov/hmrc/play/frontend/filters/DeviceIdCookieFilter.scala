@@ -20,6 +20,7 @@ import play.api.{Logger, Play}
 import play.api.Play.current
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.filters.frontend.DeviceIdFilter
+import org.apache.commons.codec.binary.Base64
 
 class DeviceIdCookieFilter(val appName: String, val auditConnector: AuditConnector) extends DeviceIdFilter {
 
@@ -32,7 +33,12 @@ class DeviceIdCookieFilter(val appName: String, val auditConnector: AuditConnect
     throw new SecurityException(s"$message $currentSecret")
   }
 
-  override lazy val previousSecrets = Play.current.configuration.getStringSeq(previousSecret).getOrElse(Seq.empty)
+  override lazy val previousSecrets = {
+    (for {
+      encoded <- Play.current.configuration.getStringSeq(previousSecret)
+      stringList <- Some(encoded.map(item => new String(Base64.decodeBase64(item))))
+    } yield(stringList)).getOrElse(Seq.empty)
+  }
 
 }
 
