@@ -20,6 +20,7 @@ import com.kenshoo.play.metrics.MetricsFilter
 import play.api._
 import play.api.mvc._
 import play.filters.csrf.CSRFFilter
+import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.play.audit.filters.FrontendAuditFilter
 import uk.gov.hmrc.play.audit.http.config.ErrorAuditingSettings
 import uk.gov.hmrc.play.filters.frontend.{CSRFExceptionsFilter, HeadersFilter}
@@ -33,6 +34,8 @@ import uk.gov.hmrc.play.filters.frontend.DeviceIdFilter
 trait FrontendFilters {
 
   def loggingFilter: FrontendLoggingFilter
+
+  def securityFilter: SecurityHeadersFilter
 
   def frontendAuditFilter: FrontendAuditFilter
 
@@ -48,6 +51,7 @@ trait FrontendFilters {
     loggingFilter,
     frontendAuditFilter,
     CSRFExceptionsFilter,
+    securityFilter,
     CSRFFilter(),
     CacheControlFilter.fromConfig("caching.allowedContentTypes"),
     RecoveryFilter)
@@ -76,5 +80,7 @@ abstract class DefaultFrontendGlobal
 
   override def doFilter(a: EssentialAction): EssentialAction =
     Filters(super.doFilter(a), frontendFilters: _* )
+
+  override def securityFilter: SecurityHeadersFilter = SecurityHeadersFilter()
 
 }
