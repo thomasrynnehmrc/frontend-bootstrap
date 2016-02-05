@@ -41,11 +41,11 @@ object SecurityHeadersFilterFactory {
   }
 
 
-  val frameOptions: String = readAndDecodeConfigValue(FRAME_OPTIONS_CONFIG_PATH, DEFAULT_FRAME_OPTIONS)
-  val xssProtection: String = readAndDecodeConfigValue(XSS_PROTECTION_CONFIG_PATH, DEFAULT_XSS_PROTECTION)
-  val contentTypeOptions: String = readAndDecodeConfigValue(CONTENT_TYPE_OPTIONS_CONFIG_PATH, DEFAULT_CONTENT_TYPE_OPTIONS)
-  val permittedCrossDomainPolicies: String = readAndDecodeConfigValue(PERMITTED_CROSS_DOMAIN_POLICIES_CONFIG_PATH, DEFAULT_PERMITTED_CROSS_DOMAIN_POLICIES)
-  val contentSecurityPolicy: String = readAndDecodeConfigValue(CONTENT_SECURITY_POLICY_CONFIG_PATH, DEFAULT_CONTENT_SECURITY_POLICY)
+  private val frameOptions: String = readAndDecodeConfigValue(FRAME_OPTIONS_CONFIG_PATH, DEFAULT_FRAME_OPTIONS)
+  private val xssProtection: String = readAndDecodeConfigValue(XSS_PROTECTION_CONFIG_PATH, DEFAULT_XSS_PROTECTION)
+  private val contentTypeOptions: String = readAndDecodeConfigValue(CONTENT_TYPE_OPTIONS_CONFIG_PATH, DEFAULT_CONTENT_TYPE_OPTIONS)
+  private val permittedCrossDomainPolicies: String = readAndDecodeConfigValue(PERMITTED_CROSS_DOMAIN_POLICIES_CONFIG_PATH, DEFAULT_PERMITTED_CROSS_DOMAIN_POLICIES)
+  private  val contentSecurityPolicy: String = readAndDecodeConfigValue(CONTENT_SECURITY_POLICY_CONFIG_PATH, DEFAULT_CONTENT_SECURITY_POLICY)
 
   val config = DefaultSecurityHeadersConfig(
     frameOptions = Option(frameOptions),
