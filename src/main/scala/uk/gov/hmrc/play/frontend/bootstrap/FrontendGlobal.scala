@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 HM Revenue & Customs
+ * Copyright 2016 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,18 @@
 package uk.gov.hmrc.play.frontend.bootstrap
 
 import com.kenshoo.play.metrics.MetricsFilter
+import org.apache.commons.codec.binary.Base64
 import play.api._
 import play.api.mvc._
 import play.filters.csrf.CSRFFilter
-import play.filters.headers.SecurityHeadersFilter
+import play.filters.headers.{DefaultSecurityHeadersConfig, SecurityHeadersFilter}
+import play.filters.headers.SecurityHeadersFilter._
 import uk.gov.hmrc.play.audit.filters.FrontendAuditFilter
 import uk.gov.hmrc.play.audit.http.config.ErrorAuditingSettings
 import uk.gov.hmrc.play.filters.frontend.{CSRFExceptionsFilter, HeadersFilter}
 import uk.gov.hmrc.play.filters.{CacheControlFilter, RecoveryFilter}
 import uk.gov.hmrc.play.frontend.bootstrap.Routing.RemovingOfTrailingSlashes
-import uk.gov.hmrc.play.frontend.filters.{DeviceIdCookieFilter, SessionCookieCryptoFilter}
+import uk.gov.hmrc.play.frontend.filters.{SecurityHeadersFilterFactory, DeviceIdCookieFilter, SessionCookieCryptoFilter}
 import uk.gov.hmrc.play.graphite.GraphiteConfig
 import uk.gov.hmrc.play.http.logging.filters.FrontendLoggingFilter
 import uk.gov.hmrc.play.filters.frontend.DeviceIdFilter
@@ -51,7 +53,6 @@ trait FrontendFilters {
     loggingFilter,
     frontendAuditFilter,
     CSRFExceptionsFilter,
-    securityFilter,
     CSRFFilter(),
     CacheControlFilter.fromConfig("caching.allowedContentTypes"),
     RecoveryFilter)
@@ -70,6 +71,8 @@ abstract class DefaultFrontendGlobal
   with ShowErrorPage {
 
   lazy val appName = Play.current.configuration.getString("appName").getOrElse("APP NAME NOT SET")
+  lazy val enableSecurityHeaderFilter = Play.current.configuration.getBoolean("security.headers.filter.enabled").getOrElse(false)
+
 
   override lazy val deviceIdFilter = DeviceIdCookieFilter(appName, auditConnector)
 
@@ -78,9 +81,11 @@ abstract class DefaultFrontendGlobal
     super.onStart(app)
   }
 
-  override def doFilter(a: EssentialAction): EssentialAction =
-    Filters(super.doFilter(a), frontendFilters: _* )
+  def filters = if (enableSecurityHeaderFilter) frontendFilters ++ Seq(securityFilter) else frontendFilters
 
-  override def securityFilter: SecurityHeadersFilter = SecurityHeadersFilter()
+  override def doFilter(a: EssentialAction): EssentialAction =
+    Filters(super.doFilter(a), filters: _* )
+
+  override def securityFilter: SecurityHeadersFilter = SecurityHeadersFilterFactory.newInstance
 
 }
