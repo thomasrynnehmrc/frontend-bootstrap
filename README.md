@@ -10,6 +10,8 @@ This library implements a basic Play Global object and related functionality for
 Simply create an object extending `DefaultFrontendGlobal`. That will provide you with the common filters and error handling.
 You can also override `frontendFilters` attribute if you need to alter the default set of filters.
 
+Note: the play SecurityHeadersFilter is not provided by default. To enable it add 'security.headers.filter.enabled=true' in your application's configuration file (`application.conf`)
+
 ### Default Play configuration
 
 This library provides a default configuration for your Play frontend applications. Use it in your application's configuration file (`application.conf`):
