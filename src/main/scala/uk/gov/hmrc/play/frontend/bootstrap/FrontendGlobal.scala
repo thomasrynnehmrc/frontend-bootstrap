@@ -71,7 +71,7 @@ abstract class DefaultFrontendGlobal
   with ShowErrorPage {
 
   lazy val appName = Play.current.configuration.getString("appName").getOrElse("APP NAME NOT SET")
-  lazy val enableSecurityHeaderFilter = Play.current.configuration.getBoolean("security.headers.filter.enabled").getOrElse(false)
+  lazy val enableSecurityHeaderFilter = Play.current.configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
 
 
   override lazy val deviceIdFilter = DeviceIdCookieFilter(appName, auditConnector)
