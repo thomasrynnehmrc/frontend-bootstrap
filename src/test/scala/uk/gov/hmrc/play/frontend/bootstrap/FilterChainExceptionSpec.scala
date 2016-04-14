@@ -17,7 +17,6 @@
 package uk.gov.hmrc.play.frontend.bootstrap
 
 import org.scalatest.{Matchers, WordSpecLike}
-import play.api.libs.concurrent.Execution.{defaultContext => ec}
 import play.api.mvc._
 import play.api.test.{FakeApplication, WithServer, WsTestClient}
 import play.filters.headers.SecurityHeadersFilter
@@ -30,8 +29,8 @@ import scala.concurrent.{Await, Future}
 class FilterChainExceptionSpec extends WordSpecLike with Matchers with WsTestClient {
 
   val routerForTest: PartialFunction[(String, String), Handler] = {
-    case ("GET", "/ok") => Action { request => Results.Ok("OK") }
-    case ("GET", "/error-async-404") => Action.async { request => Future { throw new NotFoundException("Expect 404") }(ec) }
+    case ("GET", "/ok")              => Action.async { request => Future.successful(Results.Ok("OK")) }
+    case ("GET", "/error-async-404") => Action.async { request => Future.failed(throw new NotFoundException("Expect 404")) }
   }
 
   object FiltersForTestWithSecurityFilterFirst extends WithFilters(SecurityHeadersFilter(), RecoveryFilter)
@@ -46,7 +45,11 @@ class FilterChainExceptionSpec extends WordSpecLike with Matchers with WsTestCli
   "Action throws NotFoundException and returns 404" in new  WithServer(FakeApplication(withGlobal = Some(FiltersForTestWithSecurityFilterFirst), withRoutes = routerForTest))  {
     val response = Await.result(wsUrl("/error-async-404").get(), Duration.Inf)
     response.status shouldBe (404)
-    response.body shouldBe ("Expect 404")
+  }
+
+  "No endpoint in router and returns 404" in new  WithServer(FakeApplication(withGlobal = Some(FiltersForTestWithSecurityFilterFirst), withRoutes = routerForTest))  {
+    val response = Await.result(wsUrl("/no-end-point").get(), Duration.Inf)
+    response.status shouldBe (404)
   }
 
   "Action throws NotFoundException, but filters throw an InternalServerError" in new  WithServer(FakeApplication(withGlobal = Some(FiltersForTestWithSecurityFilterLast), withRoutes = routerForTest))  {
