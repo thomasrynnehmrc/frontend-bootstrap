@@ -81,7 +81,7 @@ abstract class DefaultFrontendGlobal
     super.onStart(app)
   }
 
-  def filters = if (enableSecurityHeaderFilter) frontendFilters ++ Seq(securityFilter) else frontendFilters
+  def filters = if (enableSecurityHeaderFilter) Seq(securityFilter) ++ frontendFilters  else frontendFilters
 
   override def doFilter(a: EssentialAction): EssentialAction =
     Filters(super.doFilter(a), filters: _* )
