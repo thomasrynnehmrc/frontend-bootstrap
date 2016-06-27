@@ -1,7 +1,7 @@
-frontend-bootstrap
+frontend-bootstrap-25
 ==================
 
-[![Build Status](https://travis-ci.org/hmrc/frontend-bootstrap.svg)](https://travis-ci.org/hmrc/frontend-bootstrap) [ ![Download](https://api.bintray.com/packages/hmrc/releases/frontend-bootstrap/images/download.svg) ](https://bintray.com/hmrc/releases/frontend-bootstrap/_latestVersion)
+[![Build Status](https://travis-ci.org/hmrc/frontend-bootstrap-25.svg)](https://travis-ci.org/hmrc/frontend-bootstrap-25) [ ![Download](https://api.bintray.com/packages/hmrc/releases/frontend-bootstrap-25/images/download.svg) ](https://bintray.com/hmrc/releases/frontend-bootstrap-25/_latestVersion)
 
 This library implements a basic Play Global object and related functionality for frontend applications.
 
@@ -65,7 +65,7 @@ Add the following to your SBT build:
 ```scala
 resolvers += Resolver.bintrayRepo("hmrc", "releases")
 
-libraryDependencies += "uk.gov.hmrc" % "frontend-bootstrap" % "[INSERT-VERSION]"
+libraryDependencies += "uk.gov.hmrc" % "frontend-bootstrap-25" % "[INSERT-VERSION]"
 ```
 
 ## License ##

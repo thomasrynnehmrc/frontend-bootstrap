@@ -7,7 +7,7 @@ object HmrcBuild extends Build {
   import uk.gov.hmrc.SbtAutoBuildPlugin
   import uk.gov.hmrc.versioning.SbtGitVersioning
 
-  val appName = "frontend-bootstrap"
+  val appName = "frontend-bootstrap-25"
 
   val appDependencies = Dependencies.compile ++ Dependencies.test
 
