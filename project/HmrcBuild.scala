@@ -29,7 +29,7 @@ object HmrcBuild extends Build {
 
 object Dependencies {
 
-  import play.PlayImport._
+  import play.sbt.PlayImport._
   import play.core.PlayVersion
 
   val compile = Seq(
