@@ -37,7 +37,9 @@ class ShowErrorPageSpec extends WordSpecLike with Matchers {
     "return a generic InternalServerError result" in {
       val exception = new Exception("Runtime exception")
       val result = resolveError(FakeRequestHeader, exception)
+
       result.header.status shouldBe INTERNAL_SERVER_ERROR
+      result.header.headers should contain (CACHE_CONTROL -> "no-cache")
     }
 
     "return a generic InternalServerError result if the exception cause is null" in {
@@ -45,6 +47,7 @@ class ShowErrorPageSpec extends WordSpecLike with Matchers {
       val result = resolveError(FakeRequestHeader, exception)
 
       result.header.status shouldBe INTERNAL_SERVER_ERROR
+      result.header.headers should contain (CACHE_CONTROL -> "no-cache")
     }
 
     "return an InternalServerError result for an application error" in {
