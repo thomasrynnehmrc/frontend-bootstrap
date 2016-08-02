@@ -17,6 +17,7 @@
 package uk.gov.hmrc.play.frontend.bootstrap
 
 import play.api._
+import play.api.http.HeaderNames._
 import play.api.i18n.Messages
 import play.api.mvc.Results._
 import play.api.mvc.{Result, _}
@@ -56,7 +57,7 @@ trait ShowErrorPage extends GlobalSettings {
 
   def resolveError(rh: RequestHeader, ex: Throwable) = ex.getCause match {
     case ApplicationException(domain, result, _) => result
-    case _ => InternalServerError(internalServerErrorTemplate(rh))
+    case _ => InternalServerError(internalServerErrorTemplate(rh)).withHeaders(CACHE_CONTROL -> "no-cache")
   }
 
 }
