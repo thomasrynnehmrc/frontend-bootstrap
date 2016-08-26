@@ -16,10 +16,6 @@
 
 package uk.gov.hmrc.play.frontend.bootstrap
 
-import javax.inject.Inject
-
-import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import com.kenshoo.play.metrics.MetricsFilter
 import play.api._
 import play.api.mvc._
@@ -27,22 +23,12 @@ import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.play.audit.filters.FrontendAuditFilter
 import uk.gov.hmrc.play.audit.http.config.ErrorAuditingSettings
-import uk.gov.hmrc.play.filters.frontend.{CSRFExceptionsFilter, HeadersFilter}
+import uk.gov.hmrc.play.filters.frontend.{CSRFExceptionsFilter, DeviceIdFilter, HeadersFilter}
 import uk.gov.hmrc.play.filters.{CacheControlFilter, RecoveryFilter}
 import uk.gov.hmrc.play.frontend.bootstrap.Routing.RemovingOfTrailingSlashes
 import uk.gov.hmrc.play.frontend.filters.{DeviceIdCookieFilter, SecurityHeadersFilterFactory, SessionCookieCryptoFilter}
 import uk.gov.hmrc.play.graphite.GraphiteConfig
 import uk.gov.hmrc.play.http.logging.filters.FrontendLoggingFilter
-import uk.gov.hmrc.play.filters.frontend.DeviceIdFilter
-
-trait Materializers {
-  implicit val system = ActorSystem("temp")
-  implicit val materializer = ActorMaterializer()
-}
-
-trait MicroserviceFilterSupport extends Filter with Materializers {
-  override implicit def mat: Materializer = materializer
-}
 
 trait FrontendFilters {
 
@@ -52,15 +38,11 @@ trait FrontendFilters {
 
   def frontendAuditFilter: FrontendAuditFilter
 
-  def csrfExceptionsFilter: CSRFExceptionsFilter
-
   def metricsFilter: MetricsFilter
 
   def deviceIdFilter : DeviceIdFilter
 
   def csrfFilter: CSRFFilter
-
-  def recoveryFilter: RecoveryFilter
 
   protected lazy val defaultFrontendFilters: Seq[EssentialFilter] = Seq(
     metricsFilter,
@@ -69,10 +51,10 @@ trait FrontendFilters {
     deviceIdFilter,
     loggingFilter,
     frontendAuditFilter,
-    csrfExceptionsFilter,
+    CSRFExceptionsFilter,
     csrfFilter,
     CacheControlFilter.fromConfig("caching.allowedContentTypes"),
-    recoveryFilter)
+    RecoveryFilter)
 
   def frontendFilters: Seq[EssentialFilter] = defaultFrontendFilters
 

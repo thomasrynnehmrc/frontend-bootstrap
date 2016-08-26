@@ -37,7 +37,7 @@ object Dependencies {
   val compile = Seq(
     filters,
     "uk.gov.hmrc" %% "crypto" % "3.1.0",
-    "uk.gov.hmrc" %% "play-filters-25" % "0.2.0",
+    "uk.gov.hmrc" %% "play-filters-25" % "3463ffb581fb263eeb1b1ffd23946a2e369f45b7",
     "uk.gov.hmrc" %% "play-graphite-25" % "0.3.0",
     "com.typesafe.play" %% "play" % PlayVersion.current,
     "de.threedimensions" %% "metrics-play" % "2.5.13"

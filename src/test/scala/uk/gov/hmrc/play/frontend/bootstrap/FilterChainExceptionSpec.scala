@@ -19,29 +19,27 @@ package uk.gov.hmrc.play.frontend.bootstrap
 import javax.inject.Inject
 
 import org.scalatest.{Matchers, WordSpecLike}
-import org.scalatestplus.play.{OneServerPerSuite, OneServerPerTest}
-import play.api.Play
+import org.scalatestplus.play.OneServerPerSuite
 import play.api.http.HttpFilters
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc._
 import play.api.routing.Router
 import play.api.routing.sird._
 import play.api.test.WsTestClient
 import play.filters.headers.SecurityHeadersFilter
-import play.test.WithServer
 import uk.gov.hmrc.play.filters.RecoveryFilter
 import uk.gov.hmrc.play.http.NotFoundException
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class FiltersForTestWithSecurityFilterFirst @Inject() (recoveryFilter: RecoveryFilter, securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
-  def filters = Seq(securityHeaderFilter, recoveryFilter)
+class FiltersForTestWithSecurityFilterFirst @Inject() (securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
+  def filters = Seq(securityHeaderFilter, RecoveryFilter)
 }
 
-class FiltersForTestWithSecurityFilterLast @Inject() (recoveryFilter: RecoveryFilter, securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
-  def filters = Seq(securityHeaderFilter, recoveryFilter)
+class FiltersForTestWithSecurityFilterLast @Inject() (securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
+  def filters = Seq(securityHeaderFilter, RecoveryFilter)
 }
 
 class FilterChainExceptionSecurityFirstSpec extends WordSpecLike with Matchers with WsTestClient with OneServerPerSuite {

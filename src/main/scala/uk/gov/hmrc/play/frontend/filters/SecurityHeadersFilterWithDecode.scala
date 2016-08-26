@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.frontend.filters
 
 import org.apache.commons.codec.binary.Base64
-import play.api.{Configuration, Play}
+import play.api.Play
 import play.filters.headers.{SecurityHeadersConfig, SecurityHeadersFilter}
 
 object SecurityHeadersFilterFactory {
