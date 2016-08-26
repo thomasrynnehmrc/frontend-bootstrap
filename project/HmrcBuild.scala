@@ -20,9 +20,8 @@ object HmrcBuild extends Build {
       crossScalaVersions := Seq("2.11.7"),
       resolvers := Seq(
         Resolver.bintrayRepo("hmrc", "releases"),
-        // TODO remove this before release - releases should not depend on release candidates
-        Resolver.bintrayRepo("hmrc", "release-candidates"),
-        Resolver.typesafeRepo("releases")
+        Resolver.typesafeRepo("releases"),
+        Resolver.jcenterRepo
       )
   )
     .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
