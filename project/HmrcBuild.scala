@@ -24,7 +24,7 @@ object HmrcBuild extends Build {
         Resolver.bintrayRepo("hmrc", "release-candidates"),
         Resolver.typesafeRepo("releases")
       )
-    )
+  )
     .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
 
 }
@@ -37,17 +37,19 @@ object Dependencies {
   val compile = Seq(
     filters,
     "uk.gov.hmrc" %% "crypto" % "3.1.0",
-    "uk.gov.hmrc" %% "play-filters-25" % "0.1.0-2-g7394c24",
-    "uk.gov.hmrc" %% "play-graphite-25" % "0.1.0-0-g0000000",
+    "uk.gov.hmrc" %% "play-filters-25" % "0.2.0",
+    "uk.gov.hmrc" %% "play-graphite-25" % "0.3.0",
     "com.typesafe.play" %% "play" % PlayVersion.current,
-    "com.kenshoo" %% "metrics-play" % "2.4.0_0.4.0"
+    "de.threedimensions" %% "metrics-play" % "2.5.13"
   )
 
   val test = Seq(
     "com.typesafe.play" %% "play-test" % PlayVersion.current % "test",
+    "com.typesafe.play" %% "play-specs2" % PlayVersion.current % "test",
     "org.scalatest" %% "scalatest" % "2.2.4" % "test",
     "org.pegdown" % "pegdown" % "1.5.0" % "test",
-    "org.mockito" % "mockito-all" % "1.9.5" % "test"
+    "org.mockito" % "mockito-all" % "1.9.5" % "test",
+    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test"
   )
 
 }

@@ -18,13 +18,13 @@ package uk.gov.hmrc.play.frontend.bootstrap
 
 import javax.inject.Inject
 
+import akka.actor.ActorSystem
+import akka.stream.{ActorMaterializer, Materializer}
 import com.kenshoo.play.metrics.MetricsFilter
-import org.apache.commons.codec.binary.Base64
 import play.api._
 import play.api.mvc._
 import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
-import play.filters.headers.SecurityHeadersFilter._
 import uk.gov.hmrc.play.audit.filters.FrontendAuditFilter
 import uk.gov.hmrc.play.audit.http.config.ErrorAuditingSettings
 import uk.gov.hmrc.play.filters.frontend.{CSRFExceptionsFilter, HeadersFilter}
@@ -34,6 +34,15 @@ import uk.gov.hmrc.play.frontend.filters.{DeviceIdCookieFilter, SecurityHeadersF
 import uk.gov.hmrc.play.graphite.GraphiteConfig
 import uk.gov.hmrc.play.http.logging.filters.FrontendLoggingFilter
 import uk.gov.hmrc.play.filters.frontend.DeviceIdFilter
+
+trait Materializers {
+  implicit val system = ActorSystem("temp")
+  implicit val materializer = ActorMaterializer()
+}
+
+trait MicroserviceFilterSupport extends Filter with Materializers {
+  override implicit def mat: Materializer = materializer
+}
 
 trait FrontendFilters {
 
@@ -49,6 +58,8 @@ trait FrontendFilters {
 
   def deviceIdFilter : DeviceIdFilter
 
+  def csrfFilter: CSRFFilter
+
   def recoveryFilter: RecoveryFilter
 
   protected lazy val defaultFrontendFilters: Seq[EssentialFilter] = Seq(
@@ -59,7 +70,7 @@ trait FrontendFilters {
     loggingFilter,
     frontendAuditFilter,
     csrfExceptionsFilter,
-    CSRFFilter(),
+    csrfFilter,
     CacheControlFilter.fromConfig("caching.allowedContentTypes"),
     recoveryFilter)
 
@@ -67,11 +78,7 @@ trait FrontendFilters {
 
 }
 
-abstract class DefaultFrontendGlobal @Inject() (
-  val csrfExceptionsFilter: CSRFExceptionsFilter,
-  val metricsFilter: MetricsFilter,
-  val recoveryFilter: RecoveryFilter
-)
+abstract class DefaultFrontendGlobal
   extends GlobalSettings
   with FrontendFilters
   with GraphiteConfig
@@ -98,17 +105,4 @@ abstract class DefaultFrontendGlobal @Inject() (
 
   override def securityFilter: SecurityHeadersFilter = SecurityHeadersFilterFactory.newInstance
 
-}
-
-class DummyFrontendGlobal @Inject() (metricsFilter: MetricsFilter, csrfExceptionsFilter: CSRFExceptionsFilter, recoveryFilter: RecoveryFilter)
-  extends DefaultFrontendGlobal(csrfExceptionsFilter, metricsFilter, recoveryFilter) {
-  override def microserviceMetricsConfig(implicit app: Application) = ???
-
-  override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: Request[_]) = ???
-
-  override def auditConnector = ???
-
-  override def loggingFilter = ???
-
-  override def frontendAuditFilter = ???
 }

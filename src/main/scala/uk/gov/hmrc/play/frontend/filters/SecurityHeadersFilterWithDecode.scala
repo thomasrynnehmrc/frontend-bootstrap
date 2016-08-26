@@ -17,9 +17,8 @@
 package uk.gov.hmrc.play.frontend.filters
 
 import org.apache.commons.codec.binary.Base64
-import play.api.Play
-import play.filters.headers.{SecurityHeadersFilter, DefaultSecurityHeadersConfig}
-import play.filters.headers.SecurityHeadersFilter._
+import play.api.{Configuration, Play}
+import play.filters.headers.{SecurityHeadersConfig, SecurityHeadersFilter}
 
 object SecurityHeadersFilterFactory {
 
@@ -30,16 +29,21 @@ object SecurityHeadersFilterFactory {
   val PERMITTED_CROSS_DOMAIN_POLICIES_CONFIG_PATH: String = "play.filters.headers.permittedCrossDomainPolicies"
   val CONTENT_SECURITY_POLICY_CONFIG_PATH: String = "play.filters.headers.contentSecurityPolicy"
 
+  val DEFAULT_FRAME_OPTIONS = "DENY"
+  val DEFAULT_XSS_PROTECTION = "1; mode=block"
+  val DEFAULT_CONTENT_TYPE_OPTIONS = "nosniff"
+  val DEFAULT_PERMITTED_CROSS_DOMAIN_POLICIES = "master-only"
+  val DEFAULT_CONTENT_SECURITY_POLICY = "default-src 'self'"
+
   lazy val enableSecurityHeaderFilterDecode = Play.current.configuration.getBoolean("security.headers.filter.decoding.enabled").getOrElse(false)
 
   def readAndDecodeConfigValue(configPropertyName: String, defaultPropertyValue: String) = Play.current.configuration.getString(configPropertyName)
     .fold(defaultPropertyValue) { value =>
-    if (enableSecurityHeaderFilterDecode)
-       new String(Base64.decodeBase64(value))
+      if (enableSecurityHeaderFilterDecode)
+        new String(Base64.decodeBase64(value))
 
-    else value
-  }
-
+      else value
+    }
 
   private val frameOptions: String = readAndDecodeConfigValue(FRAME_OPTIONS_CONFIG_PATH, DEFAULT_FRAME_OPTIONS)
   private val xssProtection: String = readAndDecodeConfigValue(XSS_PROTECTION_CONFIG_PATH, DEFAULT_XSS_PROTECTION)
@@ -47,13 +51,13 @@ object SecurityHeadersFilterFactory {
   private val permittedCrossDomainPolicies: String = readAndDecodeConfigValue(PERMITTED_CROSS_DOMAIN_POLICIES_CONFIG_PATH, DEFAULT_PERMITTED_CROSS_DOMAIN_POLICIES)
   private  val contentSecurityPolicy: String = readAndDecodeConfigValue(CONTENT_SECURITY_POLICY_CONFIG_PATH, DEFAULT_CONTENT_SECURITY_POLICY)
 
-  val config = DefaultSecurityHeadersConfig(
+  val config = SecurityHeadersConfig(
     frameOptions = Option(frameOptions),
     xssProtection = Option(xssProtection),
     contentTypeOptions = Option(contentTypeOptions),
     permittedCrossDomainPolicies = Option(permittedCrossDomainPolicies),
-    contentSecurityPolicy = Option(contentSecurityPolicy))
-
+    contentSecurityPolicy = Option(contentSecurityPolicy)
+  )
 
   def newInstance = SecurityHeadersFilter(config)
 

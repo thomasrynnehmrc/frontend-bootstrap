@@ -17,8 +17,10 @@
 package uk.gov.hmrc.play.frontend.bootstrap
 
 import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatestplus.play.OneAppPerTest
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Handler
-import play.api.test.{FakeApplication, FakeRequest, WithApplication}
+import play.api.test.{FakeRequest, WithApplication}
 
 import scala.util.matching.Regex
 
@@ -31,14 +33,15 @@ class BlockingOfPathsSpec extends WordSpecLike with Matchers {
       case _ => new Handler {}
     }
 
-    abstract class TestCase(pattern: Option[Regex]) extends WithApplication(FakeApplication(withRoutes = everythingRoutesToAHandler)) {
+    abstract class TestCase(pattern: Option[Regex]) extends WithApplication(new GuiceApplicationBuilder().routes(everythingRoutesToAHandler).build()) {
+
       lazy val BlockingOfPaths = new Routing.BlockingOfPaths {
         override def blockedPathPattern: Option[Regex] = pattern
       }
     }
 
     "block the urls that match the regex given as config" in new TestCase(pattern = `blocks /paye/*`) {
-      BlockingOfPaths.onRouteRequest(FakeRequest("GET", "/paye/company-car")) should not be defined
+      BlockingOfPaths.onRouteRequest(FakeRequest("GET", "/paye/company-car")) should be(empty)
     }
 
     "allow the urls that do not match the regex given as config" in new TestCase(pattern = `blocks /paye/*`) {
