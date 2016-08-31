@@ -24,7 +24,7 @@ import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.play.audit.filters.FrontendAuditFilter
 import uk.gov.hmrc.play.audit.http.config.ErrorAuditingSettings
 import uk.gov.hmrc.play.filters.frontend.{CSRFExceptionsFilter, DeviceIdFilter, HeadersFilter}
-import uk.gov.hmrc.play.filters.{CacheControlFilter, RecoveryFilter}
+import uk.gov.hmrc.play.filters.{CacheControlFilter, Materializers, RecoveryFilter}
 import uk.gov.hmrc.play.frontend.bootstrap.Routing.RemovingOfTrailingSlashes
 import uk.gov.hmrc.play.frontend.filters.{DeviceIdCookieFilter, SecurityHeadersFilterFactory, SessionCookieCryptoFilter}
 import uk.gov.hmrc.play.graphite.GraphiteConfig
@@ -67,7 +67,8 @@ abstract class DefaultFrontendGlobal
   with RemovingOfTrailingSlashes
   with Routing.BlockingOfPaths
   with ErrorAuditingSettings
-  with ShowErrorPage {
+  with ShowErrorPage
+  with Materializers {
 
   lazy val appName = Play.current.configuration.getString("appName").getOrElse("APP NAME NOT SET")
   lazy val enableSecurityHeaderFilter = Play.current.configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
@@ -86,5 +87,7 @@ abstract class DefaultFrontendGlobal
     Filters(super.doFilter(a), filters: _* )
 
   override def securityFilter: SecurityHeadersFilter = SecurityHeadersFilterFactory.newInstance
+
+  override def csrfFilter: CSRFFilter = CSRFFilter()
 
 }
