@@ -90,4 +90,6 @@ abstract class DefaultFrontendGlobal
 
   override def csrfFilter: CSRFFilter = CSRFFilter()
 
+  override def metricsFilter: MetricsFilter = Play.current.injector.instanceOf[MetricsFilter]
+
 }
