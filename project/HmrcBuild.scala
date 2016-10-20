@@ -3,11 +3,10 @@ import sbt._
 
 object HmrcBuild extends Build {
 
-  import uk.gov.hmrc.DefaultBuildSettings._
   import uk.gov.hmrc.SbtAutoBuildPlugin
   import uk.gov.hmrc.versioning.SbtGitVersioning
 
-  val appName = "frontend-bootstrap-25"
+  val appName = "frontend-bootstrap"
 
   val appDependencies = Dependencies.compile ++ Dependencies.test
 
@@ -36,8 +35,8 @@ object Dependencies {
   val compile = Seq(
     filters,
     "uk.gov.hmrc" %% "crypto" % "3.1.0",
-    "uk.gov.hmrc" %% "play-filters-25" % "3463ffb581fb263eeb1b1ffd23946a2e369f45b7",
-    "uk.gov.hmrc" %% "play-graphite-25" % "0.3.0",
+    "uk.gov.hmrc" %% "play-filters" % "5.1.0",
+    "uk.gov.hmrc" %% "play-graphite" % "3.0.0",
     "com.typesafe.play" %% "play" % PlayVersion.current,
     "de.threedimensions" %% "metrics-play" % "2.5.13"
   )
