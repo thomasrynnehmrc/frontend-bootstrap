@@ -17,21 +17,18 @@
 package uk.gov.hmrc.play.frontend.bootstrap
 
 import com.kenshoo.play.metrics.MetricsFilter
-import org.apache.commons.codec.binary.Base64
 import play.api._
 import play.api.mvc._
 import play.filters.csrf.CSRFFilter
-import play.filters.headers.{DefaultSecurityHeadersConfig, SecurityHeadersFilter}
-import play.filters.headers.SecurityHeadersFilter._
+import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.play.audit.filters.FrontendAuditFilter
 import uk.gov.hmrc.play.audit.http.config.ErrorAuditingSettings
-import uk.gov.hmrc.play.filters.frontend.{CSRFExceptionsFilter, HeadersFilter}
-import uk.gov.hmrc.play.filters.{CacheControlFilter, RecoveryFilter}
+import uk.gov.hmrc.play.filters.frontend.{CSRFExceptionsFilter, DeviceIdFilter, HeadersFilter}
+import uk.gov.hmrc.play.filters.{CacheControlFilter, Materializers, RecoveryFilter}
 import uk.gov.hmrc.play.frontend.bootstrap.Routing.RemovingOfTrailingSlashes
-import uk.gov.hmrc.play.frontend.filters.{SecurityHeadersFilterFactory, DeviceIdCookieFilter, SessionCookieCryptoFilter}
+import uk.gov.hmrc.play.frontend.filters.{DeviceIdCookieFilter, SecurityHeadersFilterFactory, SessionCookieCryptoFilter}
 import uk.gov.hmrc.play.graphite.GraphiteConfig
 import uk.gov.hmrc.play.http.logging.filters.FrontendLoggingFilter
-import uk.gov.hmrc.play.filters.frontend.DeviceIdFilter
 
 trait FrontendFilters {
 
@@ -41,9 +38,11 @@ trait FrontendFilters {
 
   def frontendAuditFilter: FrontendAuditFilter
 
-  def metricsFilter: MetricsFilter = MetricsFilter
+  def metricsFilter: MetricsFilter
 
   def deviceIdFilter : DeviceIdFilter
+
+  def csrfFilter: CSRFFilter
 
   protected lazy val defaultFrontendFilters: Seq[EssentialFilter] = Seq(
     metricsFilter,
@@ -53,7 +52,7 @@ trait FrontendFilters {
     loggingFilter,
     frontendAuditFilter,
     CSRFExceptionsFilter,
-    CSRFFilter(),
+    csrfFilter,
     CacheControlFilter.fromConfig("caching.allowedContentTypes"),
     RecoveryFilter)
 
@@ -68,7 +67,8 @@ abstract class DefaultFrontendGlobal
   with RemovingOfTrailingSlashes
   with Routing.BlockingOfPaths
   with ErrorAuditingSettings
-  with ShowErrorPage {
+  with ShowErrorPage
+  with Materializers {
 
   lazy val appName = Play.current.configuration.getString("appName").getOrElse("APP NAME NOT SET")
   lazy val enableSecurityHeaderFilter = Play.current.configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
@@ -87,5 +87,9 @@ abstract class DefaultFrontendGlobal
     Filters(super.doFilter(a), filters: _* )
 
   override def securityFilter: SecurityHeadersFilter = SecurityHeadersFilterFactory.newInstance
+
+  override def csrfFilter: CSRFFilter = CSRFFilter()
+
+  override def metricsFilter: MetricsFilter = Play.current.injector.instanceOf[MetricsFilter]
 
 }

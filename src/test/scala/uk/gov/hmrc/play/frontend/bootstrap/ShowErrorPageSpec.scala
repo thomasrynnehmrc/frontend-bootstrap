@@ -16,16 +16,19 @@
 
 package uk.gov.hmrc.play.frontend.bootstrap
 
+import java.security.cert.X509Certificate
+
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.GlobalSettings
-import play.api.libs.iteratee.Enumerator
+import play.api.http.HttpEntity
 import play.api.mvc._
 import play.api.test.FakeHeaders
 import play.api.test.Helpers._
 import play.twirl.api.Html
 import uk.gov.hmrc.play.frontend.exceptions.ApplicationException
+import org.scalatestplus.play.OneAppPerSuite
 
-class ShowErrorPageSpec extends WordSpecLike with Matchers {
+class ShowErrorPageSpec extends WordSpecLike with Matchers with OneAppPerSuite {
 
   object TestShowErrorPage extends ShowErrorPage with GlobalSettings {
     override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit rh: Request[_]): Html = Html("error")
@@ -55,7 +58,7 @@ class ShowErrorPageSpec extends WordSpecLike with Matchers {
       val responseCode = SEE_OTHER
       val location = "http://some.test.location/page"
       val theResult = Result(
-        ResponseHeader(responseCode, Map("Location" -> location)), Enumerator(Array.empty)
+        ResponseHeader(responseCode, Map("Location" -> location)), HttpEntity.NoEntity
       )
 
       val appException = new ApplicationException("paye", theResult, "application exception")
@@ -88,4 +91,6 @@ case object FakeRequestHeader extends RequestHeader {
   override def tags: Map[String, String] = Map.empty
 
   override def secure: Boolean = false
+
+  override def clientCertificateChain: Option[Seq[X509Certificate]] = None
 }

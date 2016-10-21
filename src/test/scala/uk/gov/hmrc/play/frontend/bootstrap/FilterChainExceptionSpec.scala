@@ -16,44 +16,96 @@
 
 package uk.gov.hmrc.play.frontend.bootstrap
 
+import javax.inject.Inject
+
 import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatestplus.play.OneServerPerSuite
+import play.api.http.HttpFilters
+import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc._
-import play.api.test.{FakeApplication, WithServer, WsTestClient}
+import play.api.routing.Router
+import play.api.routing.sird._
+import play.api.test.WsTestClient
 import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.play.filters.RecoveryFilter
 import uk.gov.hmrc.play.http.NotFoundException
 
+import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
 
-class FilterChainExceptionSpec extends WordSpecLike with Matchers with WsTestClient {
+class FiltersForTestWithSecurityFilterFirst @Inject() (securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
+  def filters = Seq(securityHeaderFilter, RecoveryFilter)
+}
 
-  val routerForTest: PartialFunction[(String, String), Handler] = {
-    case ("GET", "/ok")              => Action.async { request => Future.successful(Results.Ok("OK")) }
-    case ("GET", "/error-async-404") => Action.async { request => Future.failed(throw new NotFoundException("Expect 404")) }
+class FiltersForTestWithSecurityFilterLast @Inject() (securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
+  def filters = Seq(securityHeaderFilter, RecoveryFilter)
+}
+
+class FilterChainExceptionSecurityFirstSpec extends WordSpecLike with Matchers with WsTestClient with OneServerPerSuite {
+
+  val routerForTest: Router = Router.from {
+    case GET(p"/ok") => Action { request => Results.Ok("OK") }
+    case GET(p"/error-async-404") => Action { request => throw new NotFoundException("Expect 404") }
   }
 
-  object FiltersForTestWithSecurityFilterFirst extends WithFilters(SecurityHeadersFilter(), RecoveryFilter)
-  object FiltersForTestWithSecurityFilterLast extends WithFilters(RecoveryFilter, SecurityHeadersFilter())
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .overrides(
+      bind[HttpFilters].to[FiltersForTestWithSecurityFilterFirst]
+    ).router(routerForTest).build()
 
-  "Action throws no exception and returns 200 OK" in new  WithServer(FakeApplication(withGlobal = Some(FiltersForTestWithSecurityFilterFirst), withRoutes = routerForTest))  {
-    val response = Await.result(wsUrl("/ok").get(), Duration.Inf)
+  "Action throws no exception and returns 200 OK" in {
+    val response = Await.result(wsUrl("/ok")(port).get(), Duration.Inf)
     response.status shouldBe (200)
     response.body shouldBe ("OK")
   }
 
-  "Action throws NotFoundException and returns 404" in new  WithServer(FakeApplication(withGlobal = Some(FiltersForTestWithSecurityFilterFirst), withRoutes = routerForTest))  {
-    val response = Await.result(wsUrl("/error-async-404").get(), Duration.Inf)
+  "Action throws NotFoundException and returns 404" in {
+    val response = Await.result(wsUrl("/error-async-404")(port).get(), Duration.Inf)
     response.status shouldBe (404)
   }
 
-  "No endpoint in router and returns 404" in new  WithServer(FakeApplication(withGlobal = Some(FiltersForTestWithSecurityFilterFirst), withRoutes = routerForTest))  {
-    val response = Await.result(wsUrl("/no-end-point").get(), Duration.Inf)
+  "No endpoint in router and returns 404" in {
+    val response = Await.result(wsUrl("/no-end-point")(port).get(), Duration.Inf)
     response.status shouldBe (404)
   }
 
-  "Action throws NotFoundException, but filters throw an InternalServerError" in new  WithServer(FakeApplication(withGlobal = Some(FiltersForTestWithSecurityFilterLast), withRoutes = routerForTest))  {
-    val response = Await.result(wsUrl("/error-async-404").get(), Duration.Inf)
-    response.status shouldBe (500)
+  "Action throws NotFoundException, but filters throw a 404" in {
+    val response = Await.result(wsUrl("/error-async-404")(port).get(), Duration.Inf)
+    response.status shouldBe (404)
+  }
+}
+
+class FilterChainExceptionSecurityLastSpec extends WordSpecLike with Matchers with WsTestClient with OneServerPerSuite {
+
+  val routerForTest: Router = Router.from {
+    case GET(p"/ok") => Action { request => Results.Ok("OK") }
+    case GET(p"/error-async-404") => Action { request => throw new NotFoundException("Expect 404") }
+  }
+
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .overrides(
+      bind[HttpFilters].to[FiltersForTestWithSecurityFilterLast]
+    ).router(routerForTest).build()
+
+  "Action throws no exception and returns 200 OK" in {
+    val response = Await.result(wsUrl("/ok")(port).get(), Duration.Inf)
+    response.status shouldBe (200)
+    response.body shouldBe ("OK")
+  }
+
+  "Action throws NotFoundException and returns 404" in {
+    val response = Await.result(wsUrl("/error-async-404")(port).get(), Duration.Inf)
+    response.status shouldBe (404)
+  }
+
+  "No endpoint in router and returns 404" in {
+    val response = Await.result(wsUrl("/no-end-point")(port).get(), Duration.Inf)
+    response.status shouldBe (404)
+  }
+
+  "Action throws NotFoundException, but filters throw a 404" in {
+    val response = Await.result(wsUrl("/error-async-404")(port).get(), Duration.Inf)
+    response.status shouldBe (404)
   }
 }

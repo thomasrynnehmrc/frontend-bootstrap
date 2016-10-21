@@ -72,7 +72,7 @@ class DeviceIdCookieFilterSpec extends WordSpecLike with Matchers with MockitoSu
 
       val deviceIdRequestCookie: Cookie = requestPassedToAction.cookies(DeviceId.MdtpDeviceId)
 
-      val responseDeviceIdCookie = Cookies.decode(response.header.headers(HeaderNames.SET_COOKIE)).head.value
+      val responseDeviceIdCookie = Cookies.decodeSetCookieHeader(response.header.headers(HeaderNames.SET_COOKIE)).head.value
       responseDeviceIdCookie shouldBe deviceIdRequestCookie.value
     }
 
@@ -83,7 +83,7 @@ class DeviceIdCookieFilterSpec extends WordSpecLike with Matchers with MockitoSu
 
       val deviceIdRequestCookie: Cookie = requestPassedToAction.cookies(DeviceId.MdtpDeviceId)
 
-      val responseDeviceIdCookie = Cookies.decode(response.header.headers(HeaderNames.SET_COOKIE)).head.value
+      val responseDeviceIdCookie = Cookies.decodeSetCookieHeader(response.header.headers(HeaderNames.SET_COOKIE)).head.value
       responseDeviceIdCookie shouldBe deviceIdRequestCookie.value
     }
 

@@ -24,6 +24,8 @@ import play.api.mvc.{Result, _}
 import play.twirl.api.Html
 import uk.gov.hmrc.play.frontend.exceptions.ApplicationException
 import scala.concurrent.Future
+import play.api.Play.current
+import play.api.i18n.Messages.Implicits._
 
 trait ShowErrorPage extends GlobalSettings {
 

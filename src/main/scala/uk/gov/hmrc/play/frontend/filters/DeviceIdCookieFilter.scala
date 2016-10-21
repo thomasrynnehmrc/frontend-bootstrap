@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.play.frontend.filters
 
-import play.api.{Logger, Play}
-import play.api.Play.current
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.filters.frontend.DeviceIdFilter
 import org.apache.commons.codec.binary.Base64
+import play.api.Play.current
+import play.api.{Logger, Play}
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.filters.MicroserviceFilterSupport
+import uk.gov.hmrc.play.filters.frontend.DeviceIdFilter
 
-class DeviceIdCookieFilter(val appName: String, val auditConnector: AuditConnector) extends DeviceIdFilter {
+class DeviceIdCookieFilter(val appName: String, val auditConnector: AuditConnector) extends DeviceIdFilter
+  with MicroserviceFilterSupport {
 
   final val currentSecret = "cookie.deviceId.secret"
   final val previousSecret = "cookie.deviceId.previous.secret"
@@ -37,7 +39,7 @@ class DeviceIdCookieFilter(val appName: String, val auditConnector: AuditConnect
     (for {
       encoded <- Play.current.configuration.getStringSeq(previousSecret)
       stringList <- Some(encoded.map(item => new String(Base64.decodeBase64(item))))
-    } yield(stringList)).getOrElse(Seq.empty)
+    } yield (stringList)).getOrElse(Seq.empty)
   }
 
 }

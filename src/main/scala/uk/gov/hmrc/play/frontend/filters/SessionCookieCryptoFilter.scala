@@ -17,9 +17,10 @@
 package uk.gov.hmrc.play.frontend.filters
 
 import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted, PlainText}
+import uk.gov.hmrc.play.filters.MicroserviceFilterSupport
 import uk.gov.hmrc.play.filters.frontend.CookieCryptoFilter
 
-object SessionCookieCryptoFilter extends CookieCryptoFilter {
+object SessionCookieCryptoFilter extends CookieCryptoFilter with MicroserviceFilterSupport {
 
   // Lazy because the filter is instantiated before the config is loaded
   private lazy val crypto = ApplicationCrypto.SessionCookieCrypto
