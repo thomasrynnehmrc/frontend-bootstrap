@@ -17,6 +17,7 @@
 package uk.gov.hmrc.play.frontend.bootstrap
 
 import com.kenshoo.play.metrics.MetricsFilter
+import org.slf4j.MDC
 import play.api._
 import play.api.mvc._
 import play.filters.csrf.CSRFFilter
@@ -72,12 +73,14 @@ abstract class DefaultFrontendGlobal
 
   lazy val appName = Play.current.configuration.getString("appName").getOrElse("APP NAME NOT SET")
   lazy val enableSecurityHeaderFilter = Play.current.configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
-
+  lazy val loggerDateFormat: Option[String] = Play.current.configuration.getString("logger.json.dateformat")
 
   override lazy val deviceIdFilter = DeviceIdCookieFilter(appName, auditConnector)
 
   override def onStart(app: Application) {
     Logger.info(s"Starting frontend : $appName : in mode : ${app.mode}")
+    MDC.put("appName", appName)
+    loggerDateFormat.foreach(str => MDC.put("logger.json.dateformat", str))
     super.onStart(app)
   }
 

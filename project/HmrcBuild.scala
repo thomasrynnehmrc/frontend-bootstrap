@@ -38,7 +38,8 @@ object Dependencies {
     "uk.gov.hmrc" %% "play-filters" % "5.3.0",
     "uk.gov.hmrc" %% "play-graphite" % "3.0.0",
     "com.typesafe.play" %% "play" % PlayVersion.current,
-    "de.threedimensions" %% "metrics-play" % "2.5.13"
+    "de.threedimensions" %% "metrics-play" % "2.5.13",
+    "ch.qos.logback" % "logback-core" % "1.1.7"
   )
 
   val test = Seq(
