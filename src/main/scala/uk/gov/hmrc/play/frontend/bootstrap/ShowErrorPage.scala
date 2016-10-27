@@ -57,7 +57,7 @@ trait ShowErrorPage extends GlobalSettings {
   final override def onHandlerNotFound(rh: RequestHeader) =
     Future.successful(NotFound(notFoundTemplate(rh)))
 
-  def resolveError(rh: RequestHeader, ex: Throwable) = ex.getCause match {
+  def resolveError(rh: RequestHeader, ex: Throwable) = ex match {
     case ApplicationException(domain, result, _) => result
     case _ => InternalServerError(internalServerErrorTemplate(rh)).withHeaders(CACHE_CONTROL -> "no-cache")
   }

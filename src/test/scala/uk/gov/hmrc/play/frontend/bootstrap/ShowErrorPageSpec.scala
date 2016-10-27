@@ -62,9 +62,8 @@ class ShowErrorPageSpec extends WordSpecLike with Matchers with OneAppPerSuite {
       )
 
       val appException = new ApplicationException("paye", theResult, "application exception")
-      val exception = new Exception(appException)
 
-      val result = resolveError(FakeRequestHeader, exception)
+      val result = resolveError(FakeRequestHeader, appException)
 
       result shouldBe theResult
     }
