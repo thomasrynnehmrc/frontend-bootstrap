@@ -20,7 +20,9 @@ import org.apache.commons.codec.binary.Base64
 import play.api.Play
 import play.filters.headers.{SecurityHeadersConfig, SecurityHeadersFilter}
 
-object SecurityHeadersFilterFactory {
+object SecurityHeadersFilterFactory extends SecurityHeadersFilterFactory
+
+class SecurityHeadersFilterFactory {
 
 
   val FRAME_OPTIONS_CONFIG_PATH: String = "play.filters.headers.frameOptions"
@@ -37,12 +39,14 @@ object SecurityHeadersFilterFactory {
 
   lazy val enableSecurityHeaderFilterDecode = Play.current.configuration.getBoolean("security.headers.filter.decoding.enabled").getOrElse(false)
 
-  def readAndDecodeConfigValue(configPropertyName: String, defaultPropertyValue: String) = Play.current.configuration.getString(configPropertyName)
-    .fold(defaultPropertyValue) { value =>
-      if (enableSecurityHeaderFilterDecode)
-        new String(Base64.decodeBase64(value))
+  def isNotDefaultValue(defaultPropertyValue: String, propertyValue: String): Boolean = defaultPropertyValue != propertyValue
 
-      else value
+  def readAndDecodeConfigValue(configPropertyName: String, defaultPropertyValue: String) = Play.current.configuration.getString(configPropertyName)
+    .fold(defaultPropertyValue) { propertyValue =>
+      if (enableSecurityHeaderFilterDecode && isNotDefaultValue(defaultPropertyValue, propertyValue))
+        new String(Base64.decodeBase64(propertyValue))
+
+      else propertyValue
     }
 
   private val frameOptions: String = readAndDecodeConfigValue(FRAME_OPTIONS_CONFIG_PATH, DEFAULT_FRAME_OPTIONS)
