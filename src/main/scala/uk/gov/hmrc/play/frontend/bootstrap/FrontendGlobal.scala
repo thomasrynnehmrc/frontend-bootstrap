@@ -45,7 +45,7 @@ trait FrontendFilters {
 
   def csrfFilter: CSRFFilter
 
-  protected lazy val defaultFrontendFilters: Seq[EssentialFilter] = Seq(
+  protected def defaultFrontendFilters: Seq[EssentialFilter] = Seq(
     metricsFilter,
     HeadersFilter,
     SessionCookieCryptoFilter,
