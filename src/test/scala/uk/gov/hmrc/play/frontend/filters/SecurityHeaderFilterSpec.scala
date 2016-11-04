@@ -56,7 +56,7 @@ class SecurityHeaderFilterSpec extends WordSpecLike with Matchers with MockitoSu
     "add security header to an http response with filter enabled and  settings decoding disabled" in new WithApplication(appDecodingDisabled) with Setup {
 
       val incomingRequest = FakeRequest()
-      val futureResult = SecurityHeadersFilterFactory.newInstance(action)(incomingRequest).run()
+      val futureResult = new SecurityHeadersFilterFactory().newInstance(action)(incomingRequest).run()
 
       val result = Await.result(futureResult, Duration.Inf)
 
@@ -77,7 +77,7 @@ class SecurityHeaderFilterSpec extends WordSpecLike with Matchers with MockitoSu
     "add security header to an http response with filter enabled and  settings decoding enabled" in new WithApplication(appDecodingEnabled) with Setup {
 
       val incomingRequest = FakeRequest()
-      val futureResult = SecurityHeadersFilterFactory.newInstance(action)(incomingRequest).run()
+      val futureResult = new SecurityHeadersFilterFactory().newInstance(action)(incomingRequest).run()
 
       val result = Await.result(futureResult, Duration.Inf)
 
