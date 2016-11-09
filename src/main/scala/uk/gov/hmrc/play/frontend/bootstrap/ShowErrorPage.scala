@@ -23,9 +23,12 @@ import play.api.mvc.Results._
 import play.api.mvc.{Result, _}
 import play.twirl.api.Html
 import uk.gov.hmrc.play.frontend.exceptions.ApplicationException
+
 import scala.concurrent.Future
 import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
+
+import scala.util.control.NonFatal
 
 trait ShowErrorPage extends GlobalSettings {
 
@@ -51,8 +54,28 @@ trait ShowErrorPage extends GlobalSettings {
   final override def onBadRequest(rh: RequestHeader, error: String) =
     Future.successful(BadRequest(badRequestTemplate(rh)))
 
-  final override def onError(request: RequestHeader, ex: Throwable): Future[Result] =
+  final override def onError(request: RequestHeader, ex: Throwable): Future[Result] = {
+    logError(request, ex)
     Future.successful(resolveError(request, ex))
+  }
+
+  private def logError(request: RequestHeader, ex: Throwable): Unit = {
+    try {
+      Logger.error(
+        """
+          |
+          |! %sInternal server error, for (%s) [%s] ->
+          | """.stripMargin.format(ex match {
+          case p: PlayException => "@" + p.id + " - "
+          case _ => ""
+        }, request.method, request.uri),
+        ex
+      )
+
+    } catch {
+      case NonFatal(e) => DefaultGlobal.onError(request, e)
+    }
+  }
 
   final override def onHandlerNotFound(rh: RequestHeader) =
     Future.successful(NotFound(notFoundTemplate(rh)))
