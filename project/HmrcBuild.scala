@@ -19,6 +19,7 @@ object HmrcBuild extends Build {
       crossScalaVersions := Seq("2.11.7"),
       resolvers := Seq(
         Resolver.bintrayRepo("hmrc", "releases"),
+        Resolver.bintrayRepo("hmrc", "release-candidates"),
         Resolver.typesafeRepo("releases"),
         Resolver.jcenterRepo
       )
@@ -35,7 +36,7 @@ object Dependencies {
   val compile = Seq(
     filters,
     "uk.gov.hmrc" %% "crypto" % "3.1.0",
-    "uk.gov.hmrc" %% "play-filters" % "5.8.0",
+    "uk.gov.hmrc" %% "play-filters" % "5.8.0-3-g30375a8",
     "uk.gov.hmrc" %% "play-graphite" % "3.1.0",
     "com.typesafe.play" %% "play" % PlayVersion.current,
     "de.threedimensions" %% "metrics-play" % "2.5.13",

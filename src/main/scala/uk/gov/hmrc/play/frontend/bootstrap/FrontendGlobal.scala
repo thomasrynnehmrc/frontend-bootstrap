@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 HM Revenue & Customs
+ * Copyright 2017 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package uk.gov.hmrc.play.frontend.bootstrap
 
 import com.kenshoo.play.metrics.MetricsFilter
+import org.joda.time.{DateTime, Duration}
 import org.slf4j.MDC
 import play.api._
 import play.api.mvc._
@@ -24,7 +25,7 @@ import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.play.audit.filters.FrontendAuditFilter
 import uk.gov.hmrc.play.audit.http.config.ErrorAuditingSettings
-import uk.gov.hmrc.play.filters.frontend.{CSRFExceptionsFilter, DeviceIdFilter, HeadersFilter}
+import uk.gov.hmrc.play.filters.frontend.{CSRFExceptionsFilter, DeviceIdFilter, HeadersFilter, SessionTimeoutFilter}
 import uk.gov.hmrc.play.filters.{CacheControlFilter, MicroserviceFilterSupport, RecoveryFilter}
 import uk.gov.hmrc.play.frontend.bootstrap.Routing.RemovingOfTrailingSlashes
 import uk.gov.hmrc.play.frontend.filters.{DeviceIdCookieFilter, SecurityHeadersFilterFactory, SessionCookieCryptoFilter}
@@ -45,6 +46,8 @@ trait FrontendFilters {
 
   def csrfFilter: CSRFFilter
 
+  def sessionTimeoutFilter: SessionTimeoutFilter
+
   protected def defaultFrontendFilters: Seq[EssentialFilter] = Seq(
     metricsFilter,
     HeadersFilter,
@@ -52,6 +55,7 @@ trait FrontendFilters {
     deviceIdFilter,
     loggingFilter,
     frontendAuditFilter,
+    sessionTimeoutFilter,
     CSRFExceptionsFilter,
     csrfFilter,
     CacheControlFilter.fromConfig("caching.allowedContentTypes"),
@@ -94,5 +98,14 @@ abstract class DefaultFrontendGlobal
   override def csrfFilter: CSRFFilter = CSRFFilter()
 
   override def metricsFilter: MetricsFilter = Play.current.injector.instanceOf[MetricsFilter]
+
+  override def sessionTimeoutFilter: SessionTimeoutFilter = {
+    val defaultTimeout = Duration.standardMinutes(15)
+    val timeoutDuration = Play.current.configuration.getLong("session.timeoutSeconds")
+      .map(Duration.standardSeconds)
+      .getOrElse(defaultTimeout)
+
+    new SessionTimeoutFilter(timeoutDuration = timeoutDuration)
+  }
 
 }
