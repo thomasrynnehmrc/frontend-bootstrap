@@ -24,6 +24,7 @@ object SecurityHeadersFilterFactory extends SecurityHeadersFilterFactory
 
 class SecurityHeadersFilterFactory {
 
+  def configuration = Play.current.configuration
 
   val FRAME_OPTIONS_CONFIG_PATH: String = "play.filters.headers.frameOptions"
   val XSS_PROTECTION_CONFIG_PATH: String = "play.filters.headers.xssProtection"
@@ -37,11 +38,11 @@ class SecurityHeadersFilterFactory {
   val DEFAULT_PERMITTED_CROSS_DOMAIN_POLICIES = "master-only"
   val DEFAULT_CONTENT_SECURITY_POLICY = "default-src 'self'"
 
-  lazy val enableSecurityHeaderFilterDecode = Play.current.configuration.getBoolean("security.headers.filter.decoding.enabled").getOrElse(false)
+  lazy val enableSecurityHeaderFilterDecode = configuration.getBoolean("security.headers.filter.decoding.enabled").getOrElse(false)
 
   def isNotDefaultValue(defaultPropertyValue: String, propertyValue: String): Boolean = defaultPropertyValue != propertyValue
 
-  def readAndDecodeConfigValue(configPropertyName: String, defaultPropertyValue: String) = Play.current.configuration.getString(configPropertyName)
+  def readAndDecodeConfigValue(configPropertyName: String, defaultPropertyValue: String) = configuration.getString(configPropertyName)
     .fold(defaultPropertyValue) { propertyValue =>
       if (enableSecurityHeaderFilterDecode && isNotDefaultValue(defaultPropertyValue, propertyValue))
         new String(Base64.decodeBase64(propertyValue))
