@@ -48,6 +48,8 @@ trait FrontendFilters {
 
   def sessionTimeoutFilter: SessionTimeoutFilter
 
+  def csrfExceptionsFilter: CSRFExceptionsFilter
+
   protected def defaultFrontendFilters: Seq[EssentialFilter] = Seq(
     metricsFilter,
     HeadersFilter,
@@ -56,7 +58,7 @@ trait FrontendFilters {
     loggingFilter,
     frontendAuditFilter,
     sessionTimeoutFilter,
-    CSRFExceptionsFilter,
+    csrfExceptionsFilter,
     csrfFilter,
     CacheControlFilter.fromConfig("caching.allowedContentTypes"),
     RecoveryFilter)
@@ -106,6 +108,15 @@ abstract class DefaultFrontendGlobal
       .getOrElse(defaultTimeout)
 
     new SessionTimeoutFilter(timeoutDuration = timeoutDuration)
+  }
+
+  override def csrfExceptionsFilter: CSRFExceptionsFilter = {
+    val uriWhiteList =
+      Play.current.configuration
+        .getStringSeq("csrfexceptions.whitelist")
+        .getOrElse(Seq.empty).toSet
+
+    new CSRFExceptionsFilter(uriWhiteList)
   }
 
 }
