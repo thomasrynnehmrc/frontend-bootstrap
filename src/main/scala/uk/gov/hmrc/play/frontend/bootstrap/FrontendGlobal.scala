@@ -110,9 +110,9 @@ abstract class DefaultFrontendGlobal
       .map(Duration.standardSeconds)
       .getOrElse(defaultTimeout)
 
-    val disableSessionWiping = configuration
-      .getBoolean("session.disableIdleSessionWipe")
-      .getOrElse(false)
+    val wipeIdleSession = configuration
+      .getBoolean("session.wipeIdleSession")
+      .getOrElse(true)
 
     val additionalSessionKeysToKeep = configuration
         .getStringSeq("session.additionalSessionKeysToKeep")
@@ -121,7 +121,7 @@ abstract class DefaultFrontendGlobal
     new SessionTimeoutFilter(
       timeoutDuration = timeoutDuration,
       additionalSessionKeysToKeep = additionalSessionKeysToKeep,
-      onlyWipeAuthToken = disableSessionWiping)
+      onlyWipeAuthToken = !wipeIdleSession)
   }
 
   override def csrfExceptionsFilter: CSRFExceptionsFilter = {
