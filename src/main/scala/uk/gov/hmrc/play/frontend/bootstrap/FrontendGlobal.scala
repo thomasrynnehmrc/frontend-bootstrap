@@ -77,9 +77,11 @@ abstract class DefaultFrontendGlobal
   with ShowErrorPage
   with MicroserviceFilterSupport {
 
-  lazy val appName = Play.current.configuration.getString("appName").getOrElse("APP NAME NOT SET")
-  lazy val enableSecurityHeaderFilter = Play.current.configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
-  lazy val loggerDateFormat: Option[String] = Play.current.configuration.getString("logger.json.dateformat")
+  private lazy val configuration = Play.current.configuration
+
+  lazy val appName: String = configuration.getString("appName").getOrElse("APP NAME NOT SET")
+  lazy val enableSecurityHeaderFilter: Boolean = configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
+  lazy val loggerDateFormat: Option[String] = configuration.getString("logger.json.dateformat")
 
   override lazy val deviceIdFilter = DeviceIdCookieFilter(appName, auditConnector)
 
@@ -103,16 +105,27 @@ abstract class DefaultFrontendGlobal
 
   override def sessionTimeoutFilter: SessionTimeoutFilter = {
     val defaultTimeout = Duration.standardMinutes(15)
-    val timeoutDuration = Play.current.configuration.getLong("session.timeoutSeconds")
+    val timeoutDuration = configuration
+      .getLong("session.timeoutSeconds")
       .map(Duration.standardSeconds)
       .getOrElse(defaultTimeout)
 
-    new SessionTimeoutFilter(timeoutDuration = timeoutDuration)
+    val disableSessionWiping = configuration
+      .getBoolean("session.disableIdleSessionWipe")
+      .getOrElse(false)
+
+    val additionalSessionKeysToKeep = configuration
+        .getStringSeq("session.additionalSessionKeysToKeep")
+        .getOrElse(Seq.empty).toSet
+
+    new SessionTimeoutFilter(
+      timeoutDuration = timeoutDuration,
+      additionalSessionKeysToKeep = additionalSessionKeysToKeep,
+      onlyWipeAuthToken = disableSessionWiping)
   }
 
   override def csrfExceptionsFilter: CSRFExceptionsFilter = {
-    val uriWhiteList =
-      Play.current.configuration
+    val uriWhiteList = configuration
         .getStringSeq("csrfexceptions.whitelist")
         .getOrElse(Seq.empty).toSet
 
