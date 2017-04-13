@@ -77,7 +77,7 @@ abstract class DefaultFrontendGlobal
   with ShowErrorPage
   with MicroserviceFilterSupport {
 
-  private lazy val configuration = Play.current.configuration
+  def configuration = Play.current.configuration
 
   lazy val appName: String = configuration.getString("appName").getOrElse("APP NAME NOT SET")
   lazy val enableSecurityHeaderFilter: Boolean = configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
