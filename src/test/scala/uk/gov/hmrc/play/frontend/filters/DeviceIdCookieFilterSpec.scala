@@ -98,7 +98,7 @@ class DeviceIdCookieFilterSpec extends WordSpecLike with Matchers with MockitoSu
       val deviceIdRequestCookie: Cookie = requestPassedToAction.cookies(DeviceId.MdtpDeviceId)
 
       deviceIdRequestCookie.value shouldBe deviceId.value
-      response.header.headers shouldBe Map.empty
+      response.header.headers(HeaderNames.SET_COOKIE) should include (deviceId.value)
     }
 
     "successfully decode a deviceId generated from a previous secret" in new WithApplication(FakeApplication(additionalConfiguration = appConfig)) with Setup {
@@ -113,7 +113,7 @@ class DeviceIdCookieFilterSpec extends WordSpecLike with Matchers with MockitoSu
       val deviceIdRequestCookie: Cookie = requestPassedToAction.cookies(DeviceId.MdtpDeviceId)
 
       deviceIdRequestCookie.value shouldBe cookieDeviceIdPrevious.value
-      response.header.headers shouldBe Map.empty
+      response.header.headers(HeaderNames.SET_COOKIE) should include(cookieDeviceIdPrevious.value)
     }
 
   }
