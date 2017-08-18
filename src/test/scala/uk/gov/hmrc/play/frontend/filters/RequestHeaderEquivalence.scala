@@ -16,18 +16,20 @@
 
 package uk.gov.hmrc.play.frontend.filters
 
-import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted, PlainText}
+import org.scalactic.Equivalence
+import play.api.mvc.RequestHeader
 
-object SessionCookieCryptoFilter extends CookieCryptoFilter with MicroserviceFilterSupport {
+object RequestHeaderEquivalence extends Equivalence[RequestHeader] {
 
-  // Lazy because the filter is instantiated before the config is loaded
-  private lazy val crypto = ApplicationCrypto.SessionCookieCrypto
-
-  override protected val encrypter = encrypt _
-  override protected val decrypter = decrypt _
-
-  def encrypt(plainCookie: String): String = crypto.encrypt(PlainText(plainCookie)).value
-
-  def decrypt(encryptedCookie: String): String = crypto.decrypt(Crypted(encryptedCookie)).value
-
+  def areEquivalent(h1: RequestHeader, h2: RequestHeader): Boolean = {
+    h1.id == h2.id &&
+    h1.tags == h2.tags &&
+    h1.uri == h2.uri &&
+    h1.path == h2.path &&
+    h1.method == h2.method &&
+    h1.version == h2.version &&
+    h1.queryString == h2.queryString &&
+    h1.headers.toMap == h2.headers.toMap &&
+    h1.remoteAddress == h2.remoteAddress
+  }
 }

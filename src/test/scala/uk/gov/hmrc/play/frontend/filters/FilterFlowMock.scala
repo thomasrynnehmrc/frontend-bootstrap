@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.play.frontend.filters
 
-import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted, PlainText}
+import play.api.mvc.Results._
+import play.api.mvc._
 
-object SessionCookieCryptoFilter extends CookieCryptoFilter with MicroserviceFilterSupport {
+import scala.concurrent.ExecutionContext
 
-  // Lazy because the filter is instantiated before the config is loaded
-  private lazy val crypto = ApplicationCrypto.SessionCookieCrypto
+trait FilterFlowMock {
 
-  override protected val encrypter = encrypt _
-  override protected val decrypter = decrypt _
+  def actionNotFoundMessage = "404 Not Found"
 
-  def encrypt(plainCookie: String): String = crypto.encrypt(PlainText(plainCookie)).value
+  def nextAction(implicit ec: ExecutionContext): Action[AnyContent] = Action(NotFound(actionNotFoundMessage))
 
-  def decrypt(encryptedCookie: String): String = crypto.decrypt(Crypted(encryptedCookie)).value
-
+  def exceptionThrowingAction(implicit ec: ExecutionContext) = Action.async { request =>
+    throw new RuntimeException("Something went wrong")
+  }
 }

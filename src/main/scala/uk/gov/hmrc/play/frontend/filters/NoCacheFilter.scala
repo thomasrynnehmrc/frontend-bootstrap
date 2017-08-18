@@ -16,18 +16,19 @@
 
 package uk.gov.hmrc.play.frontend.filters
 
-import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted, PlainText}
+import play.api.mvc.{Filter, RequestHeader, Result}
 
-object SessionCookieCryptoFilter extends CookieCryptoFilter with MicroserviceFilterSupport {
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-  // Lazy because the filter is instantiated before the config is loaded
-  private lazy val crypto = ApplicationCrypto.SessionCookieCrypto
+/**
+  * This filter adds Cache-Control: no-cache,no-store,max-age=0 headers
+  * to all responses overriding any existing Cache-Control headers.
+  */
 
-  override protected val encrypter = encrypt _
-  override protected val decrypter = decrypt _
+object NoCacheFilter extends Filter with MicroserviceFilterSupport {
 
-  def encrypt(plainCookie: String): String = crypto.encrypt(PlainText(plainCookie)).value
-
-  def decrypt(encryptedCookie: String): String = crypto.decrypt(Crypted(encryptedCookie)).value
-
+  def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
+    next(rh).map(_.withHeaders(CommonHeaders.NoCacheHeader))
+  }
 }

@@ -16,18 +16,27 @@
 
 package uk.gov.hmrc.play.frontend.filters
 
-import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted, PlainText}
+import java.util.UUID
 
-object SessionCookieCryptoFilter extends CookieCryptoFilter with MicroserviceFilterSupport {
+import play.api.mvc.Cookie
 
-  // Lazy because the filter is instantiated before the config is loaded
-  private lazy val crypto = ApplicationCrypto.SessionCookieCrypto
+trait DeviceIdCookie {
+  val secret : String
+  val previousSecrets: Seq[String]
 
-  override protected val encrypter = encrypt _
-  override protected val decrypter = decrypt _
+  def getTimeStamp = System.currentTimeMillis()
 
-  def encrypt(plainCookie: String): String = crypto.encrypt(PlainText(plainCookie)).value
+  def generateUUID = UUID.randomUUID().toString
 
-  def decrypt(encryptedCookie: String): String = crypto.decrypt(Crypted(encryptedCookie)).value
+  def generateDeviceId(uuid: String = generateUUID) = {
+    val timestamp = Some(getTimeStamp)
+    DeviceId(uuid, timestamp, DeviceId.generateHash(uuid, timestamp, secret))
+  }
 
+  def buildNewDeviceIdCookie() = {
+    val deviceId = generateDeviceId()
+    makeCookie(deviceId)
+  }
+
+  def makeCookie(deviceId: DeviceId) = Cookie(DeviceId.MdtpDeviceId, deviceId.value, Some(DeviceId.TenYears), secure = true)
 }

@@ -16,18 +16,24 @@
 
 package uk.gov.hmrc.play.frontend.filters
 
-import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted, PlainText}
+import akka.util.ByteString
+import play.api.http.Status._
+import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.streams.Accumulator
+import play.api.mvc._
+import uk.gov.hmrc.http.HttpException
 
-object SessionCookieCryptoFilter extends CookieCryptoFilter with MicroserviceFilterSupport {
 
-  // Lazy because the filter is instantiated before the config is loaded
-  private lazy val crypto = ApplicationCrypto.SessionCookieCrypto
+object RecoveryFilter extends EssentialFilter with Results {
 
-  override protected val encrypter = encrypt _
-  override protected val decrypter = decrypt _
+  override def apply(next: EssentialAction): EssentialAction = new EssentialAction {
+    def apply(rh: RequestHeader): Accumulator[ByteString, Result] = {
+      next(rh).recover(recoverErrors)
+    }
+  }
 
-  def encrypt(plainCookie: String): String = crypto.encrypt(PlainText(plainCookie)).value
-
-  def decrypt(encryptedCookie: String): String = crypto.decrypt(Crypted(encryptedCookie)).value
+  def recoverErrors: PartialFunction[Throwable, Result] = {
+    case e: HttpException if e.responseCode == NOT_FOUND => new Status(e.responseCode)(e.getMessage)
+  }
 
 }
