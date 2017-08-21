@@ -14,9 +14,9 @@ object HmrcBuild extends Build {
   lazy val library = Project(appName, file("."))
     .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning)
     .settings(
-      scalaVersion := "2.11.7",
+      scalaVersion := "2.11.11",
       libraryDependencies ++= appDependencies,
-      crossScalaVersions := Seq("2.11.7"),
+      crossScalaVersions := Seq("2.11.11"),
       resolvers := Seq(
         Resolver.bintrayRepo("hmrc", "releases"),
         Resolver.bintrayRepo("hmrc", "release-candidates"),
