@@ -27,7 +27,6 @@ import uk.gov.hmrc.play.frontend.config.ErrorAuditingSettings
 import uk.gov.hmrc.play.frontend.bootstrap.Routing.RemovingOfTrailingSlashes
 import uk.gov.hmrc.play.frontend.filters._
 import uk.gov.hmrc.play.graphite.GraphiteConfig
-import uk.gov.hmrc.play.http.logging.filters.FrontendLoggingFilter
 
 trait FrontendFilters {
 
