@@ -37,9 +37,11 @@ import scala.concurrent.Future
   *
   * @param clock function that supplies the current [[DateTime]]
   * @param timeoutDuration how long an untouched session should be considered valid for
+  * @param additionalSessionKeysToKeep session keys to preserve in addition to the whitelist after a timeout
+  * @param onlyWipeAuthToken only wipe auth related keys from the session on a timeout
   */
 class SessionTimeoutFilter(clock: () => DateTime = () => DateTime.now(DateTimeZone.UTC),
-                           timeoutDuration: Duration,
+                           val timeoutDuration: Duration,
                            additionalSessionKeysToKeep: Set[String] = Set.empty,
                            onlyWipeAuthToken: Boolean = false) extends Filter with MicroserviceFilterSupport {
 
