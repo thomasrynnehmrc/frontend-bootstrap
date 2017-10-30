@@ -31,7 +31,7 @@ object DeviceFingerprint {
       val decodeAttempt = Try {
         Base64.decode(cookie.value)
       }
-      decodeAttempt.failed.foreach { e => Logger.info(s"Failed to decode device fingerprint '${cookie.value}' caused by '${e.getClass.getSimpleName}:${e.getMessage}'")}
+      decodeAttempt.failed.foreach { e => Logger.warn(s"Failed to decode device fingerprint '${cookie.value}' caused by '${e.getClass.getSimpleName}:${e.getMessage}'")}
       decodeAttempt.map {
         new String(_, "UTF-8")
       }.getOrElse("-")
