@@ -20,8 +20,9 @@ import org.joda.time.{DateTime, DateTimeZone, Duration}
 import play.api.http.HeaderNames.COOKIE
 import play.api.mvc._
 import uk.gov.hmrc.http.SessionKeys._
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.Future
 
 /**
@@ -50,6 +51,8 @@ class SessionTimeoutFilter(clock: () => DateTime = () => DateTime.now(DateTimeZo
   private def wipeFromSession(session: Session, keys: Seq[String]): Session = keys.foldLeft(session)((s, k) => s - k)
 
   override def apply(f: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
+
+    implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(rh.headers, Some(rh.session))
 
     val updateTimestamp: (Result) => Result =
       result => result.addingToSession(lastRequestTimestamp -> clock().getMillis.toString)(rh)
