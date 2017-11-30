@@ -24,8 +24,7 @@ import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.AuditExtensions._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
-
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.Future
 
 trait DeviceIdFilter extends Filter with DeviceIdCookie {
@@ -41,6 +40,8 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
   private def isDeviceIdCookie(cookie: Cookie): Boolean = cookie.name == DeviceId.MdtpDeviceId && !cookie.value.isEmpty
 
   override def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader) = {
+
+    implicit val hc:HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers, Some(rh.session))
     val requestCookies = rh.headers.getAll(HeaderNames.COOKIE).flatMap(Cookies.decodeCookieHeader)
 
     def allCookiesApartFromDeviceId = requestCookies.filterNot(_.name == DeviceId.MdtpDeviceId)
@@ -83,8 +84,7 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
 
   }
 
-  private def sendDataEvent(rh: RequestHeader, badDeviceId: String, goodDeviceId: String): Unit = {
-    val hc:HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
+  private def sendDataEvent(rh: RequestHeader, badDeviceId: String, goodDeviceId: String)(implicit hc: HeaderCarrier): Unit = {
     auditConnector.sendEvent(DataEvent(appName, EventTypes.Failed,
       tags = hc.toAuditTags("deviceIdFilter", rh.path) ++ hc.toAuditTags("tamperedDeviceId", "Hash check failure"),
       detail = getTamperDetails(badDeviceId, goodDeviceId)))

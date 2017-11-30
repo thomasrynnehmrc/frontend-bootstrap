@@ -19,15 +19,17 @@ package uk.gov.hmrc.play.frontend.filters
 import play.api.mvc.{Filter, RequestHeader, Result}
 import play.api.{Logger, Play}
 import play.mvc.Http.Status
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 import scala.collection.JavaConverters._
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.Future
 
 abstract class CacheControlFilter extends Filter with MicroserviceFilterSupport {
   val cachableContentTypes: Seq[String]
 
   final def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
+    implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(rh.headers, Some(rh.session))
     next(rh).map(r =>
       (r.header.status, r.body.contentType) match {
         case (Status.NOT_MODIFIED, _) => r
