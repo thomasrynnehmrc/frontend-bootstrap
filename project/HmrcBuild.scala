@@ -36,7 +36,7 @@ object Dependencies {
   val compile = Seq(
     filters,
     "uk.gov.hmrc" %% "crypto" % "4.4.0",
-    "uk.gov.hmrc" %% "play-auditing" % "3.2.1",
+    "uk.gov.hmrc" %% "play-auditing" % "3.3.0",
     "uk.gov.hmrc" %% "http-verbs" % "7.1.0",
     "uk.gov.hmrc" %% "http-verbs-play-25" % "0.9.0",
     "uk.gov.hmrc" %% "play-graphite" % "3.6.1",
