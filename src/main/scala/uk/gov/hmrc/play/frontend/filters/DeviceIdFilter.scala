@@ -41,15 +41,14 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
 
   override def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader) = {
 
-    implicit val hc:HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers, Some(rh.session))
-    val requestCookies = rh.headers.getAll(HeaderNames.COOKIE).flatMap(Cookies.decodeCookieHeader)
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers, Some(rh.session))
+    val requestCookies             = rh.headers.getAll(HeaderNames.COOKIE).flatMap(Cookies.decodeCookieHeader)
 
     def allCookiesApartFromDeviceId = requestCookies.filterNot(_.name == DeviceId.MdtpDeviceId)
 
     val find: Option[Cookie] = requestCookies.find(isDeviceIdCookie)
-    val cookieResult = find.map {
-      deviceCookeValueId =>
-
+    val cookieResult = find
+      .map { deviceCookeValueId =>
         DeviceId.from(deviceCookeValueId.value, secret, previousSecrets) match {
 
           case Some(DeviceId(uuid, None, hash)) =>
@@ -69,13 +68,14 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
             sendDataEvent(rh, deviceCookeValueId.value, deviceIdCookie.value)
             CookeResult(allCookiesApartFromDeviceId ++ Seq(deviceIdCookie), deviceIdCookie)
         }
-    }.getOrElse {
-      // No deviceId cookie found or empty cookie value. Create new deviceId cookie, add to request and response.
-      val newDeviceIdCookie = buildNewDeviceIdCookie()
-      CookeResult(allCookiesApartFromDeviceId ++ Seq(newDeviceIdCookie), newDeviceIdCookie)
-    }
+      }
+      .getOrElse {
+        // No deviceId cookie found or empty cookie value. Create new deviceId cookie, add to request and response.
+        val newDeviceIdCookie = buildNewDeviceIdCookie()
+        CookeResult(allCookiesApartFromDeviceId ++ Seq(newDeviceIdCookie), newDeviceIdCookie)
+      }
 
-    val newCookie = HeaderNames.COOKIE -> Cookies.encodeSetCookieHeader(cookieResult.cookies)
+    val newCookie           = HeaderNames.COOKIE -> Cookies.encodeSetCookieHeader(cookieResult.cookies)
     val updatedInputHeaders = rh.copy(headers = rh.headers.replace(newCookie))
 
     next(updatedInputHeaders).map(theHttpResponse => {
@@ -84,14 +84,17 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
 
   }
 
-  private def sendDataEvent(rh: RequestHeader, badDeviceId: String, goodDeviceId: String)(implicit hc: HeaderCarrier): Unit = {
-    auditConnector.sendEvent(DataEvent(appName, EventTypes.Failed,
-      tags = hc.toAuditTags("deviceIdFilter", rh.path) ++ hc.toAuditTags("tamperedDeviceId", "Hash check failure"),
-      detail = getTamperDetails(badDeviceId, goodDeviceId)))
-  }
+  private def sendDataEvent(rh: RequestHeader, badDeviceId: String, goodDeviceId: String)(
+    implicit hc: HeaderCarrier): Unit =
+    auditConnector.sendEvent(
+      DataEvent(
+        appName,
+        EventTypes.Failed,
+        tags   = hc.toAuditTags("deviceIdFilter", rh.path) ++ hc.toAuditTags("tamperedDeviceId", "Hash check failure"),
+        detail = getTamperDetails(badDeviceId, goodDeviceId)
+      ))
 
   private def getTamperDetails(tamperDeviceId: String, newDeviceId: String) =
-    Map("tamperedDeviceId" -> tamperDeviceId,
-      "deviceID" -> newDeviceId)
+    Map("tamperedDeviceId" -> tamperDeviceId, "deviceID" -> newDeviceId)
 
 }

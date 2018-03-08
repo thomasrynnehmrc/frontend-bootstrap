@@ -31,7 +31,8 @@ import org.scalatestplus.play.OneAppPerSuite
 class ShowErrorPageSpec extends WordSpecLike with Matchers with OneAppPerSuite {
 
   object TestShowErrorPage extends ShowErrorPage with GlobalSettings {
-    override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit rh: Request[_]): Html = Html("error")
+    override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(
+      implicit rh: Request[_]): Html = Html("error")
   }
 
   import TestShowErrorPage._
@@ -39,26 +40,27 @@ class ShowErrorPageSpec extends WordSpecLike with Matchers with OneAppPerSuite {
   "resolving an error" should {
     "return a generic InternalServerError result" in {
       val exception = new Exception("Runtime exception")
-      val result = resolveError(FakeRequestHeader, exception)
+      val result    = resolveError(FakeRequestHeader, exception)
 
-      result.header.status shouldBe INTERNAL_SERVER_ERROR
-      result.header.headers should contain (CACHE_CONTROL -> "no-cache")
+      result.header.status  shouldBe INTERNAL_SERVER_ERROR
+      result.header.headers should contain(CACHE_CONTROL -> "no-cache")
     }
 
     "return a generic InternalServerError result if the exception cause is null" in {
       val exception = new Exception("Runtime exception", null)
-      val result = resolveError(FakeRequestHeader, exception)
+      val result    = resolveError(FakeRequestHeader, exception)
 
-      result.header.status shouldBe INTERNAL_SERVER_ERROR
-      result.header.headers should contain (CACHE_CONTROL -> "no-cache")
+      result.header.status  shouldBe INTERNAL_SERVER_ERROR
+      result.header.headers should contain(CACHE_CONTROL -> "no-cache")
     }
 
     "return an InternalServerError result for an application error" in {
 
       val responseCode = SEE_OTHER
-      val location = "http://some.test.location/page"
+      val location     = "http://some.test.location/page"
       val theResult = Result(
-        ResponseHeader(responseCode, Map("Location" -> location)), HttpEntity.NoEntity
+        ResponseHeader(responseCode, Map("Location" -> location)),
+        HttpEntity.NoEntity
       )
 
       val appException = new ApplicationException("paye", theResult, "application exception")

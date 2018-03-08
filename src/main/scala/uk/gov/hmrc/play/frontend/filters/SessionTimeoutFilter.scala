@@ -41,10 +41,13 @@ import scala.concurrent.Future
   * @param additionalSessionKeysToKeep session keys to preserve in addition to the whitelist after a timeout
   * @param onlyWipeAuthToken only wipe auth related keys from the session on a timeout
   */
-class SessionTimeoutFilter(clock: () => DateTime = () => DateTime.now(DateTimeZone.UTC),
-                           val timeoutDuration: Duration,
-                           additionalSessionKeysToKeep: Set[String] = Set.empty,
-                           onlyWipeAuthToken: Boolean = false) extends Filter with MicroserviceFilterSupport {
+class SessionTimeoutFilter(
+  clock: () => DateTime = () => DateTime.now(DateTimeZone.UTC),
+  val timeoutDuration: Duration,
+  additionalSessionKeysToKeep: Set[String] = Set.empty,
+  onlyWipeAuthToken: Boolean               = false)
+    extends Filter
+    with MicroserviceFilterSupport {
 
   val authRelatedKeys = Seq(authToken, token, userId)
 
@@ -97,31 +100,32 @@ class SessionTimeoutFilter(clock: () => DateTime = () => DateTime.now(DateTimeZo
     mkRequest(requestHeader, Session.deserialize(sessionMap))
   }
 
-  private def wipeAuthRelatedKeys(requestHeader: RequestHeader): RequestHeader = {
+  private def wipeAuthRelatedKeys(requestHeader: RequestHeader): RequestHeader =
     mkRequest(requestHeader, wipeFromSession(requestHeader.session, authRelatedKeys))
-  }
 
   private def mkRequest(requestHeader: RequestHeader, session: Session): RequestHeader = {
     val wipedSessionCookie = Session.encodeAsCookie(session)
-    val otherCookies = requestHeader.cookies.filterNot(_.name == wipedSessionCookie.name).toSeq
-    val wipedHeaders = requestHeader.headers.replace(COOKIE -> Cookies.encodeCookieHeader(Seq(wipedSessionCookie) ++ otherCookies))
+    val otherCookies       = requestHeader.cookies.filterNot(_.name == wipedSessionCookie.name).toSeq
+    val wipedHeaders =
+      requestHeader.headers.replace(COOKIE -> Cookies.encodeCookieHeader(Seq(wipedSessionCookie) ++ otherCookies))
     requestHeader.copy(headers = wipedHeaders)
   }
 
-  private def preservedSessionData(session: Session): Seq[(String, String)] = for {
-    key <- (SessionTimeoutFilter.whitelistedSessionKeys ++ additionalSessionKeysToKeep).toSeq
-    value <- session.get(key)
-  } yield key -> value
+  private def preservedSessionData(session: Session): Seq[(String, String)] =
+    for {
+      key   <- (SessionTimeoutFilter.whitelistedSessionKeys ++ additionalSessionKeysToKeep).toSeq
+      value <- session.get(key)
+    } yield key -> value
 
 }
 
 object SessionTimeoutFilter {
   val whitelistedSessionKeys: Set[String] = Set(
-    lastRequestTimestamp,   // the timestamp that this filter manages
-    redirect,               // a redirect used by some authentication provider journeys
-    loginOrigin,            // the name of a service that initiated a login
-    "Csrf-Token",           // the Play default name for a header that contains the CsrfToken value (here only in case it is being misused in tests)
-    "csrfToken",            // the Play default name for the CsrfToken value within the Play Session)
-    authProvider            // a deprecated value that indicates what authentication provider was used for the session - may be used to handle default redirects on failed logins
+    lastRequestTimestamp, // the timestamp that this filter manages
+    redirect, // a redirect used by some authentication provider journeys
+    loginOrigin, // the name of a service that initiated a login
+    "Csrf-Token", // the Play default name for a header that contains the CsrfToken value (here only in case it is being misused in tests)
+    "csrfToken", // the Play default name for the CsrfToken value within the Play Session)
+    authProvider // a deprecated value that indicates what authentication provider was used for the session - may be used to handle default redirects on failed logins
   )
 }

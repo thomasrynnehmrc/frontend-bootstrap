@@ -32,24 +32,28 @@ import scala.util.control.NonFatal
 
 trait ShowErrorPage extends GlobalSettings {
 
-  private implicit def rhToRequest(rh: RequestHeader) : Request[_] = Request(rh, "")
+  private implicit def rhToRequest(rh: RequestHeader): Request[_] = Request(rh, "")
 
   def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: Request[_]): Html
 
-  def badRequestTemplate(implicit request: Request[_]): Html = standardErrorTemplate(
-    Messages("global.error.badRequest400.title"),
-    Messages("global.error.badRequest400.heading"),
-    Messages("global.error.badRequest400.message"))
+  def badRequestTemplate(implicit request: Request[_]): Html =
+    standardErrorTemplate(
+      Messages("global.error.badRequest400.title"),
+      Messages("global.error.badRequest400.heading"),
+      Messages("global.error.badRequest400.message"))
 
-  def notFoundTemplate(implicit request: Request[_]): Html = standardErrorTemplate(
-    Messages("global.error.pageNotFound404.title"),
-    Messages("global.error.pageNotFound404.heading"),
-    Messages("global.error.pageNotFound404.message"))
+  def notFoundTemplate(implicit request: Request[_]): Html =
+    standardErrorTemplate(
+      Messages("global.error.pageNotFound404.title"),
+      Messages("global.error.pageNotFound404.heading"),
+      Messages("global.error.pageNotFound404.message"))
 
-  def internalServerErrorTemplate(implicit request: Request[_]): Html = standardErrorTemplate(
-    Messages("global.error.InternalServerError500.title"),
-    Messages("global.error.InternalServerError500.heading"),
-    Messages("global.error.InternalServerError500.message"))
+  def internalServerErrorTemplate(implicit request: Request[_]): Html =
+    standardErrorTemplate(
+      Messages("global.error.InternalServerError500.title"),
+      Messages("global.error.InternalServerError500.heading"),
+      Messages("global.error.InternalServerError500.message")
+    )
 
   final override def onBadRequest(rh: RequestHeader, error: String) =
     Future.successful(BadRequest(badRequestTemplate(rh)))
@@ -59,7 +63,7 @@ trait ShowErrorPage extends GlobalSettings {
     Future.successful(resolveError(request, ex))
   }
 
-  private def logError(request: RequestHeader, ex: Throwable): Unit = {
+  private def logError(request: RequestHeader, ex: Throwable): Unit =
     try {
       Logger.error(
         """
@@ -67,7 +71,7 @@ trait ShowErrorPage extends GlobalSettings {
           |! %sInternal server error, for (%s) [%s] ->
           | """.stripMargin.format(ex match {
           case p: PlayException => "@" + p.id + " - "
-          case _ => ""
+          case _                => ""
         }, request.method, request.uri),
         ex
       )
@@ -75,14 +79,13 @@ trait ShowErrorPage extends GlobalSettings {
     } catch {
       case NonFatal(e) => DefaultGlobal.onError(request, e)
     }
-  }
 
   final override def onHandlerNotFound(rh: RequestHeader) =
     Future.successful(NotFound(notFoundTemplate(rh)))
 
   def resolveError(rh: RequestHeader, ex: Throwable) = ex match {
     case ApplicationException(domain, result, _) => result
-    case _ => InternalServerError(internalServerErrorTemplate(rh)).withHeaders(CACHE_CONTROL -> "no-cache")
+    case _                                       => InternalServerError(internalServerErrorTemplate(rh)).withHeaders(CACHE_CONTROL -> "no-cache")
   }
 
 }

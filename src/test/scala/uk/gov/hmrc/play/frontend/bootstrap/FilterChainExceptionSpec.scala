@@ -34,30 +34,42 @@ import uk.gov.hmrc.play.frontend.filters.RecoveryFilter
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class FiltersForTestWithSecurityFilterFirst @Inject() (securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
+class FiltersForTestWithSecurityFilterFirst @Inject()(securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
   def filters = Seq(securityHeaderFilter, RecoveryFilter)
 }
 
-class FiltersForTestWithSecurityFilterLast @Inject() (securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
+class FiltersForTestWithSecurityFilterLast @Inject()(securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
   def filters = Seq(securityHeaderFilter, RecoveryFilter)
 }
 
-class FilterChainExceptionSecurityFirstSpec extends WordSpecLike with Matchers with WsTestClient with OneServerPerSuite {
+class FilterChainExceptionSecurityFirstSpec
+    extends WordSpecLike
+    with Matchers
+    with WsTestClient
+    with OneServerPerSuite {
 
   val routerForTest: Router = Router.from {
-    case GET(p"/ok") => Action { request => Results.Ok("OK") }
-    case GET(p"/error-async-404") => Action { request => throw new NotFoundException("Expect 404") }
+    case GET(p"/ok") =>
+      Action { request =>
+        Results.Ok("OK")
+      }
+    case GET(p"/error-async-404") =>
+      Action { request =>
+        throw new NotFoundException("Expect 404")
+      }
   }
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .overrides(
       bind[HttpFilters].to[FiltersForTestWithSecurityFilterFirst]
-    ).router(routerForTest).build()
+    )
+    .router(routerForTest)
+    .build()
 
   "Action throws no exception and returns 200 OK" in {
     val response = Await.result(wsUrl("/ok")(port).get(), Duration.Inf)
     response.status shouldBe (200)
-    response.body shouldBe ("OK")
+    response.body   shouldBe ("OK")
   }
 
   "Action throws NotFoundException and returns 404" in {
@@ -79,19 +91,27 @@ class FilterChainExceptionSecurityFirstSpec extends WordSpecLike with Matchers w
 class FilterChainExceptionSecurityLastSpec extends WordSpecLike with Matchers with WsTestClient with OneServerPerSuite {
 
   val routerForTest: Router = Router.from {
-    case GET(p"/ok") => Action { request => Results.Ok("OK") }
-    case GET(p"/error-async-404") => Action { request => throw new NotFoundException("Expect 404") }
+    case GET(p"/ok") =>
+      Action { request =>
+        Results.Ok("OK")
+      }
+    case GET(p"/error-async-404") =>
+      Action { request =>
+        throw new NotFoundException("Expect 404")
+      }
   }
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .overrides(
       bind[HttpFilters].to[FiltersForTestWithSecurityFilterLast]
-    ).router(routerForTest).build()
+    )
+    .router(routerForTest)
+    .build()
 
   "Action throws no exception and returns 200 OK" in {
     val response = Await.result(wsUrl("/ok")(port).get(), Duration.Inf)
     response.status shouldBe (200)
-    response.body shouldBe ("OK")
+    response.body   shouldBe ("OK")
   }
 
   "Action throws NotFoundException and returns 404" in {

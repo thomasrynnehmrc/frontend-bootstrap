@@ -32,16 +32,23 @@ import play.api.test.FakeRequest
 
 import scala.concurrent.Future
 
-class CookieCryptoFilterSpec extends WordSpecLike with ScalaFutures with Matchers with LogCapturing with LoneElement with MockitoSugar with TypeCheckedTripleEquals {
+class CookieCryptoFilterSpec
+    extends WordSpecLike
+    with ScalaFutures
+    with Matchers
+    with LogCapturing
+    with LoneElement
+    with MockitoSugar
+    with TypeCheckedTripleEquals {
 
   private trait Setup extends Results {
     implicit val headerEquiv = RequestHeaderEquivalence
 
-    val cookieName = "someCookieName"
-    val encryptedCookie = Cookie(cookieName, "encryptedValue")
-    val unencryptedCookie = encryptedCookie.copy(value = "decryptedValue")
+    val cookieName             = "someCookieName"
+    val encryptedCookie        = Cookie(cookieName, "encryptedValue")
+    val unencryptedCookie      = encryptedCookie.copy(value = "decryptedValue")
     val corruptEncryptedCookie = encryptedCookie.copy(value = "invalidEncryptedValue")
-    val emptyCookie = encryptedCookie.copy(value = "")
+    val emptyCookie            = encryptedCookie.copy(value = "")
 
     val normalCookie1 = Cookie("AnotherCookie1", "normalValue1")
     val normalCookie2 = Cookie("AnotherCookie2", "normalValue2")
@@ -49,7 +56,7 @@ class CookieCryptoFilterSpec extends WordSpecLike with ScalaFutures with Matcher
     val resultFromAction: Result = Ok
 
     lazy val action = {
-      val mockAction = mock[(RequestHeader) => Future[Result]]
+      val mockAction       = mock[(RequestHeader) => Future[Result]]
       val outgoingResponse = Future.successful(resultFromAction)
       when(mockAction.apply(any())).thenReturn(outgoingResponse)
       mockAction
@@ -57,21 +64,21 @@ class CookieCryptoFilterSpec extends WordSpecLike with ScalaFutures with Matcher
 
     def filter = new CookieCryptoFilter {
 
-      implicit val system = ActorSystem("test")
+      implicit val system            = ActorSystem("test")
       implicit val mat: Materializer = ActorMaterializer()
 
       override lazy val cookieName = Setup.this.cookieName
-      protected val encrypter = encrypt _
-      protected val decrypter = decrypt _
+      protected val encrypter      = encrypt _
+      protected val decrypter      = decrypt _
 
       private def encrypt(plainValue: String) = plainValue match {
         case "decryptedValue" => "encryptedValue"
-        case _ => "notfound"
+        case _                => "notfound"
       }
 
       private def decrypt(encryptedValue: String) = encryptedValue match {
         case "encryptedValue" => "decryptedValue"
-        case _ => throw new Exception("Couldn't decrypt that")
+        case _                => throw new Exception("Couldn't decrypt that")
       }
     }
 
@@ -124,7 +131,7 @@ class CookieCryptoFilterSpec extends WordSpecLike with ScalaFutures with Matcher
       val incomingRequest = FakeRequest().withCookies(normalCookie1, corruptEncryptedCookie, normalCookie2)
       withCaptureOfLoggingFrom(Logger) { logEvents =>
         filter(action)(incomingRequest)
-        requestPassedToAction should === (FakeRequest().withCookies(normalCookie1, normalCookie2))
+        requestPassedToAction                                             should ===(FakeRequest().withCookies(normalCookie1, normalCookie2))
         logEvents().filter(_.getLevel == Level.WARN).loneElement.toString should include("Could not decrypt cookie")
       }
     }

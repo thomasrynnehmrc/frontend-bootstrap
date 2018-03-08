@@ -37,12 +37,11 @@ trait CookieCryptoFilter extends Filter {
     encryptCookie(next(decryptCookie(rh)))
 
   private def decryptCookie(rh: RequestHeader) = {
-    val updatedCookies = (
-      for {
-        cookie <- rh.headers.getAll(HeaderNames.COOKIE)
-        decoded <- Cookies.decodeCookieHeader(cookie)
-        decrypted = decrypt(decoded)
-      } yield decrypted).flatten
+    val updatedCookies = (for {
+      cookie  <- rh.headers.getAll(HeaderNames.COOKIE)
+      decoded <- Cookies.decodeCookieHeader(cookie)
+      decrypted = decrypt(decoded)
+    } yield decrypted).flatten
 
     if (updatedCookies.isEmpty)
       rh.copy(headers = rh.headers.remove(HeaderNames.COOKIE))
@@ -57,28 +56,23 @@ trait CookieCryptoFilter extends Filter {
       None
   }
 
-  def decrypt(cookie: Cookie): Option[Cookie] = {
+  def decrypt(cookie: Cookie): Option[Cookie] =
     if (shouldBeEncrypted(cookie))
       tryDecrypting(cookie.value).map { decryptedValue =>
         cookie.copy(value = decryptedValue)
-      }
-    else Some(cookie)
-  }
+      } else Some(cookie)
 
+  private def encryptCookie(f: Future[Result]): Future[Result] = f.map { result =>
+    val updatedHeader: Option[String] = result.header.headers.get(HeaderNames.SET_COOKIE).map { cookieHeader =>
+      Cookies.encodeSetCookieHeader(Cookies.decodeSetCookieHeader(cookieHeader).map { cookie: Cookie =>
+        if (shouldBeEncrypted(cookie))
+          cookie.copy(value = encrypter(cookie.value))
+        else
+          cookie
+      })
+    }
 
-  private def encryptCookie(f: Future[Result]): Future[Result] = f.map {
-    result =>
-      val updatedHeader: Option[String] = result.header.headers.get(HeaderNames.SET_COOKIE).map {
-        cookieHeader =>
-          Cookies.encodeSetCookieHeader(Cookies.decodeSetCookieHeader(cookieHeader).map { cookie: Cookie =>
-            if (shouldBeEncrypted(cookie))
-              cookie.copy(value = encrypter(cookie.value))
-            else
-              cookie
-          })
-      }
-
-      updatedHeader.map(header => result.withHeaders(HeaderNames.SET_COOKIE -> header)).getOrElse(result)
+    updatedHeader.map(header => result.withHeaders(HeaderNames.SET_COOKIE -> header)).getOrElse(result)
   }
 
   private def shouldBeEncrypted(cookie: Cookie) = cookie.name == cookieName && !cookie.value.isEmpty

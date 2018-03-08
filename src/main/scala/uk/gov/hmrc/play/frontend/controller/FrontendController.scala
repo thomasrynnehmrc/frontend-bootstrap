@@ -27,18 +27,22 @@ import scala.concurrent._
 
 trait FrontendController extends Controller with Utf8MimeTypes {
 
-  implicit def hc(implicit request: Request[_]): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
+  implicit def hc(implicit request: Request[_]): HeaderCarrier =
+    HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
 
-  implicit def mdcExecutionContext(implicit loggingDetails: LoggingDetails): ExecutionContext = MdcLoggingExecutionContext.fromLoggingDetails
+  implicit def mdcExecutionContext(implicit loggingDetails: LoggingDetails): ExecutionContext =
+    MdcLoggingExecutionContext.fromLoggingDetails
 
   implicit class SessionKeyRemover(result: Future[Result]) {
-    def removeSessionKey(key: String)(implicit request: Request[_]) = result.map {_.withSession(request.session - key)}
+    def removeSessionKey(key: String)(implicit request: Request[_]) = result.map {
+      _.withSession(request.session - key)
+    }
   }
 
 }
 
 trait Utf8MimeTypes {
-  self : Controller =>
+  self: Controller =>
 
   override val JSON = s"${MimeTypes.JSON};charset=utf-8"
 

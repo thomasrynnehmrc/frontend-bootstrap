@@ -31,44 +31,50 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
 
   "SessionTimeoutFilter" should {
 
-    val now = new DateTime(2017, 1, 12, 14, 56)
+    val now             = new DateTime(2017, 1, 12, 14, 56)
     val timeoutDuration = Duration.standardMinutes(1)
-    val clock = () => now
-    val filter = new SessionTimeoutFilter(clock, timeoutDuration,
+    val clock           = () => now
+    val filter = new SessionTimeoutFilter(
+      clock,
+      timeoutDuration,
       additionalSessionKeysToKeep = Set("whitelisted"),
-      onlyWipeAuthToken = false
-    )
+      onlyWipeAuthToken           = false)
 
     "strip non-whitelist session variables from request if timestamp is old" in {
       val timestamp = now.minusMinutes(5).getMillis.toString
       implicit val rh = exampleRequest.withSession(
         lastRequestTimestamp -> timestamp,
-        authToken -> "a-token",
-        userId -> "some-userId",
-        "whitelisted" -> "whitelisted")
+        authToken            -> "a-token",
+        userId               -> "some-userId",
+        "whitelisted"        -> "whitelisted")
 
       filter.apply { req =>
-        req.session should onlyContainWhitelistedKeys(Set("whitelisted"))
+        req.session                           should onlyContainWhitelistedKeys(Set("whitelisted"))
         req.session.get(lastRequestTimestamp) shouldBe Some(timestamp)
-        req.session.get("whitelisted") shouldBe Some("whitelisted")
+        req.session.get("whitelisted")        shouldBe Some("whitelisted")
         Future.successful(Results.Ok)
       }(rh)
     }
 
     "strip non-whitelist session variables from result if timestamp is old" in {
       val timestamp = now.minusMinutes(5).getMillis.toString
-      implicit val rh = exampleRequest.withSession(lastRequestTimestamp -> timestamp, loginOrigin -> "gg", authToken -> "a-token", "whitelisted" -> "whitelisted")
+      implicit val rh = exampleRequest.withSession(
+        lastRequestTimestamp -> timestamp,
+        loginOrigin          -> "gg",
+        authToken            -> "a-token",
+        "whitelisted"        -> "whitelisted")
 
       val result = filter(successfulResult)(rh)
 
-      result.futureValue.session should onlyContainWhitelistedKeys(Set("whitelisted"))
-      result.futureValue.session.get(loginOrigin) shouldBe Some("gg")
+      result.futureValue.session                    should onlyContainWhitelistedKeys(Set("whitelisted"))
+      result.futureValue.session.get(loginOrigin)   shouldBe Some("gg")
       result.futureValue.session.get("whitelisted") shouldBe Some("whitelisted")
     }
 
     "pass through all session values if timestamp is recent" in {
       val timestamp = now.minusSeconds(5).getMillis.toString
-      implicit val rh = exampleRequest.withSession(lastRequestTimestamp -> timestamp, authToken -> "a-token", "custom" -> "custom")
+      implicit val rh =
+        exampleRequest.withSession(lastRequestTimestamp -> timestamp, authToken -> "a-token", "custom" -> "custom")
 
       val result = filter.apply { req =>
         req.session.get("custom") shouldBe Some("custom")
@@ -79,17 +85,14 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
     }
 
     "create timestamp if it's missing" in {
-      implicit val rh = exampleRequest.withSession(
-        authToken -> "a-token",
-        token -> "another-token",
-        userId -> "a-userId",
-        "custom" -> "custom")
+      implicit val rh = exampleRequest
+        .withSession(authToken -> "a-token", token -> "another-token", userId -> "a-userId", "custom" -> "custom")
 
       val result = filter.apply { req =>
-        req.session.get(authToken) shouldBe Some("a-token")
-        req.session.get(userId) shouldBe Some("a-userId")
-        req.session.get(token) shouldBe Some("another-token")
-        req.session.get("custom") shouldBe Some("custom")
+        req.session.get(authToken)            shouldBe Some("a-token")
+        req.session.get(userId)               shouldBe Some("a-userId")
+        req.session.get(token)                shouldBe Some("another-token")
+        req.session.get("custom")             shouldBe Some("custom")
         req.session.get(lastRequestTimestamp) shouldBe None
         Future.successful(Results.Ok)
       }(rh)
@@ -99,55 +102,55 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
 
     "strip only auth-related keys if timestamp is old, and onlyWipeAuthToken == true" in {
       val oldTimestamp = now.minusMinutes(5).getMillis.toString
-      val filter = new SessionTimeoutFilter(clock, timeoutDuration, Set("whitelisted"), onlyWipeAuthToken = true)
+      val filter       = new SessionTimeoutFilter(clock, timeoutDuration, Set("whitelisted"), onlyWipeAuthToken = true)
       implicit val rh = exampleRequest.withSession(
         lastRequestTimestamp -> oldTimestamp,
-        authToken -> "a-token",
-        token -> "another-token",
-        userId -> "a-userId",
-        "custom" -> "custom",
-        "whitelisted" -> "whitelisted")
+        authToken            -> "a-token",
+        token                -> "another-token",
+        userId               -> "a-userId",
+        "custom"             -> "custom",
+        "whitelisted"        -> "whitelisted")
 
       val result = filter.apply { req =>
-        req.session.get("custom") shouldBe Some("custom")
+        req.session.get("custom")  shouldBe Some("custom")
         req.session.get(authToken) shouldBe None
-        req.session.get(userId) shouldBe None
-        req.session.get(token) shouldBe None
+        req.session.get(userId)    shouldBe None
+        req.session.get(token)     shouldBe None
         Future.successful(Results.Ok)
       }(rh)
 
-      result.futureValue.session.get("custom") shouldBe Some("custom")
+      result.futureValue.session.get("custom")  shouldBe Some("custom")
       result.futureValue.session.get(authToken) shouldBe None
     }
 
     "update old timestamp with current time" in {
       implicit val rh = exampleRequest.withSession(lastRequestTimestamp -> now.minusDays(1).getMillis.toString)
-      val result = filter.apply(successfulResult)(rh)
+      val result      = filter.apply(successfulResult)(rh)
       result.futureValue.session.get(lastRequestTimestamp) shouldBe Some(now.getMillis.toString)
     }
 
     "update recent timestamp with current time" in {
       implicit val rh = exampleRequest.withSession(lastRequestTimestamp -> now.minusSeconds(1).getMillis.toString)
-      val result = filter.apply(successfulResult)(rh)
+      val result      = filter.apply(successfulResult)(rh)
       result.futureValue.session.get(lastRequestTimestamp) shouldBe Some(now.getMillis.toString)
     }
 
     "treat an invalid timestamp as a missing timestamp" in {
       implicit val rh = exampleRequest.withSession(
         lastRequestTimestamp -> "invalid-format",
-        authToken -> "a-token",
-        token -> "another-token",
-        userId -> "a-userId",
-        loginOrigin -> "gg",
-        "custom" -> "custom")
+        authToken            -> "a-token",
+        token                -> "another-token",
+        userId               -> "a-userId",
+        loginOrigin          -> "gg",
+        "custom"             -> "custom")
 
       val result = filter(successfulResult)(rh)
 
-      result.futureValue.session.get(authToken) shouldBe Some("a-token")
-      result.futureValue.session.get(userId) shouldBe Some("a-userId")
-      result.futureValue.session.get(token) shouldBe Some("another-token")
-      result.futureValue.session.get(loginOrigin) shouldBe Some("gg")
-      result.futureValue.session.get("custom") shouldBe Some("custom")
+      result.futureValue.session.get(authToken)            shouldBe Some("a-token")
+      result.futureValue.session.get(userId)               shouldBe Some("a-userId")
+      result.futureValue.session.get(token)                shouldBe Some("another-token")
+      result.futureValue.session.get(loginOrigin)          shouldBe Some("gg")
+      result.futureValue.session.get("custom")             shouldBe Some("custom")
       result.futureValue.session.get(lastRequestTimestamp) shouldBe Some(now.getMillis.toString)
     }
 
@@ -161,10 +164,7 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
 
       val timestamp = now.minusMinutes(5).getMillis.toString
       implicit val rh = exampleRequest
-        .withSession(
-          lastRequestTimestamp -> timestamp,
-          authToken -> "a-token",
-          userId -> "some-userId")
+        .withSession(lastRequestTimestamp -> timestamp, authToken -> "a-token", userId -> "some-userId")
         .withCookies(otherCookie)
 
       val result = filter(cookieResult)(rh)
@@ -173,16 +173,15 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
 
   }
 
-  private def exampleRequest = FakeRequest("POST", "/something", FakeHeaders(), AnyContentAsEmpty)
+  private def exampleRequest   = FakeRequest("POST", "/something", FakeHeaders(), AnyContentAsEmpty)
   private val successfulResult = (rh: RequestHeader) => Future.successful(Results.Ok)
 
   private def onlyContainWhitelistedKeys(additionalSessionKeysToKeep: Set[String] = Set.empty) = new Matcher[Session] {
-    override def apply(session: Session): MatchResult = {
+    override def apply(session: Session): MatchResult =
       MatchResult(
         (session.data.keySet -- whitelistedSessionKeys -- additionalSessionKeysToKeep).isEmpty,
         s"""Session keys ${session.data.keySet} did not contain only whitelisted keys: $whitelistedSessionKeys""",
         s"""Session keys ${session.data.keySet} contained only whitelisted keys: $whitelistedSessionKeys"""
       )
-    }
   }
 }

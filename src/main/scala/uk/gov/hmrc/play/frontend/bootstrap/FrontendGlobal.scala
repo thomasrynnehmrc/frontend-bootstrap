@@ -38,7 +38,7 @@ trait FrontendFilters {
 
   def metricsFilter: MetricsFilter
 
-  def deviceIdFilter : DeviceIdFilter
+  def deviceIdFilter: DeviceIdFilter
 
   def csrfFilter: CSRFFilter
 
@@ -46,37 +46,40 @@ trait FrontendFilters {
 
   def csrfExceptionsFilter: CSRFExceptionsFilter
 
-  protected def defaultFrontendFilters: Seq[EssentialFilter] = Seq(
-    metricsFilter,
-    HeadersFilter,
-    SessionCookieCryptoFilter,
-    deviceIdFilter,
-    loggingFilter,
-    frontendAuditFilter,
-    sessionTimeoutFilter,
-    csrfExceptionsFilter,
-    csrfFilter,
-    CacheControlFilter.fromConfig("caching.allowedContentTypes"),
-    RecoveryFilter)
+  protected def defaultFrontendFilters: Seq[EssentialFilter] =
+    Seq(
+      metricsFilter,
+      HeadersFilter,
+      SessionCookieCryptoFilter,
+      deviceIdFilter,
+      loggingFilter,
+      frontendAuditFilter,
+      sessionTimeoutFilter,
+      csrfExceptionsFilter,
+      csrfFilter,
+      CacheControlFilter.fromConfig("caching.allowedContentTypes"),
+      RecoveryFilter
+    )
 
   def frontendFilters: Seq[EssentialFilter] = defaultFrontendFilters
 
 }
 
 abstract class DefaultFrontendGlobal
-  extends GlobalSettings
-  with FrontendFilters
-  with GraphiteConfig
-  with RemovingOfTrailingSlashes
-  with Routing.BlockingOfPaths
-  with ErrorAuditingSettings
-  with ShowErrorPage
-  with MicroserviceFilterSupport {
+    extends GlobalSettings
+    with FrontendFilters
+    with GraphiteConfig
+    with RemovingOfTrailingSlashes
+    with Routing.BlockingOfPaths
+    with ErrorAuditingSettings
+    with ShowErrorPage
+    with MicroserviceFilterSupport {
 
   def configuration = Play.current.configuration
 
   lazy val appName: String = configuration.getString("appName").getOrElse("APP NAME NOT SET")
-  lazy val enableSecurityHeaderFilter: Boolean = configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
+  lazy val enableSecurityHeaderFilter: Boolean =
+    configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
   lazy val loggerDateFormat: Option[String] = configuration.getString("logger.json.dateformat")
 
   override lazy val deviceIdFilter = DeviceIdCookieFilter(appName, auditConnector)
@@ -88,10 +91,10 @@ abstract class DefaultFrontendGlobal
     super.onStart(app)
   }
 
-  def filters = if (enableSecurityHeaderFilter) Seq(securityFilter) ++ frontendFilters  else frontendFilters
+  def filters = if (enableSecurityHeaderFilter) Seq(securityFilter) ++ frontendFilters else frontendFilters
 
   override def doFilter(a: EssentialAction): EssentialAction =
-    Filters(super.doFilter(a), filters: _* )
+    Filters(super.doFilter(a), filters: _*)
 
   override def securityFilter: SecurityHeadersFilter = SecurityHeadersFilterFactory.newInstance
 
@@ -111,19 +114,21 @@ abstract class DefaultFrontendGlobal
       .getOrElse(true)
 
     val additionalSessionKeysToKeep = configuration
-        .getStringSeq("session.additionalSessionKeysToKeep")
-        .getOrElse(Seq.empty).toSet
+      .getStringSeq("session.additionalSessionKeysToKeep")
+      .getOrElse(Seq.empty)
+      .toSet
 
     new SessionTimeoutFilter(
-      timeoutDuration = timeoutDuration,
+      timeoutDuration             = timeoutDuration,
       additionalSessionKeysToKeep = additionalSessionKeysToKeep,
-      onlyWipeAuthToken = !wipeIdleSession)
+      onlyWipeAuthToken           = !wipeIdleSession)
   }
 
   override def csrfExceptionsFilter: CSRFExceptionsFilter = {
     val uriWhiteList = configuration
-        .getStringSeq("csrfexceptions.whitelist")
-        .getOrElse(Seq.empty).toSet
+      .getStringSeq("csrfexceptions.whitelist")
+      .getOrElse(Seq.empty)
+      .toSet
 
     new CSRFExceptionsFilter(uriWhiteList)
   }

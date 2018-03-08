@@ -25,7 +25,7 @@ import play.api.test.{FakeHeaders, FakeRequest, WithApplication}
 
 class CSRFExceptionsFilterSpec extends WordSpecLike with Matchers with ScalaFutures {
 
-  private val now = () => DateTime.now().withZone(DateTimeZone.UTC)
+  private val now          = () => DateTime.now().withZone(DateTimeZone.UTC)
   private val csrfTokenKey = "Csrf-Token"
 
   private def csrfToken(rh: RequestHeader): Option[String] = rh.headers.get(csrfTokenKey)

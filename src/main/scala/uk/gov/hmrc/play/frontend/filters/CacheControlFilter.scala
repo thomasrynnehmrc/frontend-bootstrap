@@ -32,17 +32,16 @@ abstract class CacheControlFilter extends Filter with MicroserviceFilterSupport 
     implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(rh.headers, Some(rh.session))
     next(rh).map(r =>
       (r.header.status, r.body.contentType) match {
-        case (Status.NOT_MODIFIED, _) => r
+        case (Status.NOT_MODIFIED, _)                                                      => r
         case (_, Some(contentType)) if cachableContentTypes.exists(contentType.startsWith) => r
-        case _ => r.withHeaders(CommonHeaders.NoCacheHeader)
-      }
-    )
+        case _                                                                             => r.withHeaders(CommonHeaders.NoCacheHeader)
+    })
 
   }
 }
 
 object CacheControlFilter {
-  def fromConfig(configKey: String) = {
+  def fromConfig(configKey: String) =
     new CacheControlFilter {
       override lazy val cachableContentTypes = {
         val c = Play.current.configuration.getStringList(configKey).toList.map(_.asScala).flatten
@@ -50,5 +49,4 @@ object CacheControlFilter {
         c
       }
     }
-  }
 }

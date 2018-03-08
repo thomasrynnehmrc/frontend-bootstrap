@@ -35,7 +35,9 @@ class SessionCookieCryptoFilterSpec extends WordSpecLike with Matchers with Mock
 
   val action = {
     val mockAction = mock[(RequestHeader) => Future[Result]]
-    val outgoingResponse = Future.successful(Results.Ok.withHeaders(HeaderNames.SET_COOKIE -> Cookies.encodeSetCookieHeader(Seq(Cookie(Session.COOKIE_NAME, "our-new-cookie")))))
+    val outgoingResponse = Future.successful(
+      Results.Ok.withHeaders(
+        HeaderNames.SET_COOKIE -> Cookies.encodeSetCookieHeader(Seq(Cookie(Session.COOKIE_NAME, "our-new-cookie")))))
     when(mockAction.apply(any())).thenReturn(outgoingResponse)
     mockAction
   }
@@ -48,19 +50,24 @@ class SessionCookieCryptoFilterSpec extends WordSpecLike with Matchers with Mock
 
   "SessionCookieCryptoFilter" should {
 
-    def createEncryptedCookie(cookieVal: String) = Cookie(Session.COOKIE_NAME, ApplicationCrypto.SessionCookieCrypto.encrypt(PlainText(cookieVal)).value)
+    def createEncryptedCookie(cookieVal: String) =
+      Cookie(Session.COOKIE_NAME, ApplicationCrypto.SessionCookieCrypto.encrypt(PlainText(cookieVal)).value)
 
-    "decrypt the session cookie on the way in and encrypt it again on the way back" in new WithApplication(FakeApplication(additionalConfiguration = appConfig)) {
-      val encryptedIncomingCookie = createEncryptedCookie("our-cookie")
+    "decrypt the session cookie on the way in and encrypt it again on the way back" in new WithApplication(
+      FakeApplication(additionalConfiguration = appConfig)) {
+      val encryptedIncomingCookie   = createEncryptedCookie("our-cookie")
       val unencryptedIncomingCookie = Cookie(Session.COOKIE_NAME, "our-cookie")
 
       val incomingRequest = FakeRequest().withCookies(encryptedIncomingCookie)
-      val response = SessionCookieCryptoFilter(action)(incomingRequest).futureValue
+      val response        = SessionCookieCryptoFilter(action)(incomingRequest).futureValue
 
       requestPassedToAction.cookies(Session.COOKIE_NAME) shouldBe unencryptedIncomingCookie
 
-      val encryptedOutgoingCookieValue = Cookies.decodeSetCookieHeader(response.header.headers(HeaderNames.SET_COOKIE))(0).value
-      ApplicationCrypto.SessionCookieCrypto.decrypt(Crypted(encryptedOutgoingCookieValue)).value shouldBe "our-new-cookie"
+      val encryptedOutgoingCookieValue =
+        Cookies.decodeSetCookieHeader(response.header.headers(HeaderNames.SET_COOKIE))(0).value
+      ApplicationCrypto.SessionCookieCrypto
+        .decrypt(Crypted(encryptedOutgoingCookieValue))
+        .value shouldBe "our-new-cookie"
     }
 
   }

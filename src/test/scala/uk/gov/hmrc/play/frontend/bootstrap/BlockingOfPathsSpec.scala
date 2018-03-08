@@ -27,13 +27,14 @@ import scala.util.matching.Regex
 class BlockingOfPathsSpec extends WordSpecLike with Matchers {
 
   "The onRouteRequest method" should {
-    val `blocks /paye/*` = Some( """\/paye\/.*""".r)
+    val `blocks /paye/*`    = Some("""\/paye\/.*""".r)
     val `allows everything` = None
     val everythingRoutesToAHandler: PartialFunction[(String, String), Handler] = {
       case _ => new Handler {}
     }
 
-    abstract class TestCase(pattern: Option[Regex]) extends WithApplication(new GuiceApplicationBuilder().routes(everythingRoutesToAHandler).build()) {
+    abstract class TestCase(pattern: Option[Regex])
+        extends WithApplication(new GuiceApplicationBuilder().routes(everythingRoutesToAHandler).build()) {
 
       lazy val BlockingOfPaths = new Routing.BlockingOfPaths {
         override def blockedPathPattern: Option[Regex] = pattern

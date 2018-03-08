@@ -21,12 +21,13 @@ import play.api.Play.current
 import play.api.{Logger, Play}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
-class DeviceIdCookieFilter(val appName: String, val auditConnector: AuditConnector) extends DeviceIdFilter
-  with MicroserviceFilterSupport {
+class DeviceIdCookieFilter(val appName: String, val auditConnector: AuditConnector)
+    extends DeviceIdFilter
+    with MicroserviceFilterSupport {
 
-  final val currentSecret = "cookie.deviceId.secret"
+  final val currentSecret  = "cookie.deviceId.secret"
   final val previousSecret = "cookie.deviceId.previous.secret"
-  final val message = "Missing required configuration entry for deviceIdFilter :"
+  final val message        = "Missing required configuration entry for deviceIdFilter :"
 
   override lazy val secret: String = Play.configuration.getString(currentSecret).getOrElse {
     Logger.error(s"$message $currentSecret")
@@ -35,7 +36,7 @@ class DeviceIdCookieFilter(val appName: String, val auditConnector: AuditConnect
 
   override lazy val previousSecrets = {
     (for {
-      encoded <- Play.current.configuration.getStringSeq(previousSecret)
+      encoded    <- Play.current.configuration.getStringSeq(previousSecret)
       stringList <- Some(encoded.map(item => new String(Base64.decodeBase64(item))))
     } yield (stringList)).getOrElse(Seq.empty)
   }

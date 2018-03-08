@@ -32,24 +32,24 @@ import scala.concurrent.Future
 
 class DeviceIdCookieFilterSpec extends WordSpecLike with Matchers with MockitoSugar with ScalaFutures {
 
-  final val theSecret = "some_secret"
-  final val thePreviousSecret = "some previous secret with spaces since spaces cause an issue unless encoded!!!"
-  final val previousSecret = new String(Base64.encodeBase64(thePreviousSecret.getBytes()))
+  final val theSecret            = "some_secret"
+  final val thePreviousSecret    = "some previous secret with spaces since spaces cause an issue unless encoded!!!"
+  final val previousSecret       = new String(Base64.encodeBase64(thePreviousSecret.getBytes()))
   final val previousSecretValues = Seq(previousSecret)
 
   lazy val createDeviceId = new DeviceIdCookie {
-    override val secret = theSecret
+    override val secret          = theSecret
     override val previousSecrets = previousSecretValues
   }
 
-  val appConfig = Map("cookie.deviceId.secret" -> theSecret, "cookie.deviceId.previous.secret" -> previousSecretValues)
+  val appConfig              = Map("cookie.deviceId.secret" -> theSecret, "cookie.deviceId.previous.secret" -> previousSecretValues)
   val appConfigNoPreviousKey = Map("cookie.deviceId.secret" -> theSecret)
 
   val auditConnector = mock[AuditConnector]
 
   trait Setup {
     val action = {
-      val mockAction = mock[(RequestHeader) => Future[Result]]
+      val mockAction       = mock[(RequestHeader) => Future[Result]]
       val outgoingResponse = Future.successful(Results.Ok)
       when(mockAction.apply(any())).thenReturn(outgoingResponse)
       mockAction
@@ -64,54 +64,60 @@ class DeviceIdCookieFilterSpec extends WordSpecLike with Matchers with MockitoSu
 
   "DeviceIdFilter" should {
 
-    "create the deviceId when no cookie exists" in new WithApplication(FakeApplication(additionalConfiguration = appConfig)) with Setup {
+    "create the deviceId when no cookie exists" in new WithApplication(
+      FakeApplication(additionalConfiguration = appConfig)) with Setup {
 
       val incomingRequest = FakeRequest()
-      val response = DeviceIdCookieFilter("someapp",auditConnector)(action)(incomingRequest).futureValue
+      val response        = DeviceIdCookieFilter("someapp", auditConnector)(action)(incomingRequest).futureValue
 
       val deviceIdRequestCookie: Cookie = requestPassedToAction.cookies(DeviceId.MdtpDeviceId)
 
-      val responseDeviceIdCookie = Cookies.decodeSetCookieHeader(response.header.headers(HeaderNames.SET_COOKIE)).head.value
+      val responseDeviceIdCookie =
+        Cookies.decodeSetCookieHeader(response.header.headers(HeaderNames.SET_COOKIE)).head.value
       responseDeviceIdCookie shouldBe deviceIdRequestCookie.value
     }
 
-    "create the deviceId when no cookie exists and previous keys are empty" in new WithApplication(FakeApplication(additionalConfiguration = appConfigNoPreviousKey)) with Setup {
+    "create the deviceId when no cookie exists and previous keys are empty" in new WithApplication(
+      FakeApplication(additionalConfiguration = appConfigNoPreviousKey)) with Setup {
 
       val incomingRequest = FakeRequest()
-      val response = DeviceIdCookieFilter("someapp",auditConnector)(action)(incomingRequest).futureValue
+      val response        = DeviceIdCookieFilter("someapp", auditConnector)(action)(incomingRequest).futureValue
 
       val deviceIdRequestCookie: Cookie = requestPassedToAction.cookies(DeviceId.MdtpDeviceId)
 
-      val responseDeviceIdCookie = Cookies.decodeSetCookieHeader(response.header.headers(HeaderNames.SET_COOKIE)).head.value
+      val responseDeviceIdCookie =
+        Cookies.decodeSetCookieHeader(response.header.headers(HeaderNames.SET_COOKIE)).head.value
       responseDeviceIdCookie shouldBe deviceIdRequestCookie.value
     }
 
+    "do nothing when a valid cookie exists" in new WithApplication(FakeApplication(additionalConfiguration = appConfig))
+    with Setup {
 
-    "do nothing when a valid cookie exists" in new WithApplication(FakeApplication(additionalConfiguration = appConfig)) with Setup {
-
-      val deviceId = createDeviceId.buildNewDeviceIdCookie()
+      val deviceId        = createDeviceId.buildNewDeviceIdCookie()
       val incomingRequest = FakeRequest().withCookies(deviceId)
 
-      val response = DeviceIdCookieFilter("someapp",auditConnector)(action)(incomingRequest).futureValue
+      val response = DeviceIdCookieFilter("someapp", auditConnector)(action)(incomingRequest).futureValue
 
       val deviceIdRequestCookie: Cookie = requestPassedToAction.cookies(DeviceId.MdtpDeviceId)
 
-      deviceIdRequestCookie.value shouldBe deviceId.value
-      response.header.headers(HeaderNames.SET_COOKIE) should include (deviceId.value)
+      deviceIdRequestCookie.value                     shouldBe deviceId.value
+      response.header.headers(HeaderNames.SET_COOKIE) should include(deviceId.value)
     }
 
-    "successfully decode a deviceId generated from a previous secret" in new WithApplication(FakeApplication(additionalConfiguration = appConfig)) with Setup {
+    "successfully decode a deviceId generated from a previous secret" in new WithApplication(
+      FakeApplication(additionalConfiguration = appConfig)) with Setup {
 
-      val uuid = createDeviceId.generateUUID
+      val uuid      = createDeviceId.generateUUID
       val timestamp = createDeviceId.getTimeStamp
-      val deviceIdMadeFromPrevKey = DeviceId(uuid, Some(timestamp), DeviceId.generateHash(uuid, Some(timestamp), thePreviousSecret))
+      val deviceIdMadeFromPrevKey =
+        DeviceId(uuid, Some(timestamp), DeviceId.generateHash(uuid, Some(timestamp), thePreviousSecret))
       val cookieDeviceIdPrevious = createDeviceId.makeCookie(deviceIdMadeFromPrevKey)
-      val incomingRequest = FakeRequest().withCookies(cookieDeviceIdPrevious)
+      val incomingRequest        = FakeRequest().withCookies(cookieDeviceIdPrevious)
 
-      val response = DeviceIdCookieFilter("someapp",auditConnector)(action)(incomingRequest).futureValue
+      val response                      = DeviceIdCookieFilter("someapp", auditConnector)(action)(incomingRequest).futureValue
       val deviceIdRequestCookie: Cookie = requestPassedToAction.cookies(DeviceId.MdtpDeviceId)
 
-      deviceIdRequestCookie.value shouldBe cookieDeviceIdPrevious.value
+      deviceIdRequestCookie.value                     shouldBe cookieDeviceIdPrevious.value
       response.header.headers(HeaderNames.SET_COOKIE) should include(cookieDeviceIdPrevious.value)
     }
 

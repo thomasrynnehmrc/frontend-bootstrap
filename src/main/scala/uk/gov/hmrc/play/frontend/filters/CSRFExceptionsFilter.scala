@@ -24,11 +24,12 @@ import scala.concurrent.Future
 
 class CSRFExceptionsFilter(whitelist: Set[String]) extends Filter with MicroserviceFilterSupport {
 
-  def apply(f: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
+  def apply(f: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] =
     f(filteredHeaders(rh))
-  }
 
-  private[filters] def filteredHeaders(rh: RequestHeader, now: () => DateTime = () => DateTime.now.withZone(DateTimeZone.UTC)) =
+  private[filters] def filteredHeaders(
+    rh: RequestHeader,
+    now: () => DateTime = () => DateTime.now.withZone(DateTimeZone.UTC)) =
     if (rh.method == POST && whitelist.contains(rh.path))
       rh.copy(headers = rh.headers.add("Csrf-Token" -> "nocheck"))
     else rh

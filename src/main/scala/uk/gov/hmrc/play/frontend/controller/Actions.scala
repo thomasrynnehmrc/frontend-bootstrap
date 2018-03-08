@@ -24,19 +24,23 @@ import uk.gov.hmrc.http.{HeaderNames, SessionKeys}
 import scala.concurrent.Future
 
 object UnauthorisedAction {
-  def apply(body: (Request[AnyContent] => Result), sensitiveDataFormKeys: Seq[String] = Seq.empty): Action[AnyContent] = unauthedAction(ActionWithMdc(body), sensitiveDataFormKeys)
+  def apply(body: (Request[AnyContent] => Result), sensitiveDataFormKeys: Seq[String] = Seq.empty): Action[AnyContent] =
+    unauthedAction(ActionWithMdc(body), sensitiveDataFormKeys)
 
-  def async(body: (Request[AnyContent] => Future[Result]), sensitiveDataFormKeys: Seq[String] = Seq.empty): Action[AnyContent] = unauthedAction(Action.async(body), sensitiveDataFormKeys)
+  def async(
+    body: (Request[AnyContent] => Future[Result]),
+    sensitiveDataFormKeys: Seq[String] = Seq.empty): Action[AnyContent] =
+    unauthedAction(Action.async(body), sensitiveDataFormKeys)
 
   private def unauthedAction(body: Action[AnyContent], sensitiveDataFormKeys: Seq[String]): Action[AnyContent] = body
 }
 
 /**
- * Use this Action with your endpoints, if they are synchronous and require
- * the header carrier values to be logged.
- *
- * For .async actions the MdcLoggingExecutionContext takes care of it.
- */
+  * Use this Action with your endpoints, if they are synchronous and require
+  * the header carrier values to be logged.
+  *
+  * For .async actions the MdcLoggingExecutionContext takes care of it.
+  */
 object ActionWithMdc extends ActionBuilder[Request] {
 
   private def storeHeaders(request: RequestHeader) {

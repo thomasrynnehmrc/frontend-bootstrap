@@ -28,18 +28,17 @@ object HeadersFilter extends HeadersFilter
 trait HeadersFilter extends EssentialFilter {
 
   def apply(nextAction: EssentialAction): EssentialAction = new EssentialAction {
-    def apply(request: RequestHeader): Accumulator[ByteString, Result] = {
+    def apply(request: RequestHeader): Accumulator[ByteString, Result] =
       request.session.get(xRequestId) match {
         case Some(s) => nextAction(request)
-        case _ => nextAction(addHeaders(request))
+        case _       => nextAction(addHeaders(request))
       }
-    }
 
     def addHeaders(request: RequestHeader): RequestHeader = {
-      val rid = s"govuk-tax-${UUID.randomUUID().toString}"
-      val requestIdHeader = xRequestId -> rid
+      val rid                    = s"govuk-tax-${UUID.randomUUID().toString}"
+      val requestIdHeader        = xRequestId -> rid
       val requestTimestampHeader = xRequestTimestamp -> System.nanoTime().toString
-      val newHeaders = request.headers.add(requestIdHeader, requestTimestampHeader)
+      val newHeaders             = request.headers.add(requestIdHeader, requestTimestampHeader)
       request.copy(headers = newHeaders)
     }
   }

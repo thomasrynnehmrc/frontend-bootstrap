@@ -38,18 +38,18 @@ object Routing {
 
     override def onStart(app: Application) {
       super.onStart(app)
-      Logger.info(blockedPathPattern.fold
-        (s"No requests will be blocked based on their path")
-        (p => s"Any requests with paths that match $p will be blocked"))
+      Logger.info(blockedPathPattern.fold(s"No requests will be blocked based on their path")(p =>
+        s"Any requests with paths that match $p will be blocked"))
     }
 
     override def onRouteRequest(request: RequestHeader): Option[Handler] = blockedPathPattern match {
-      case Some(isBlockedPath) => request.path match {
-        case isBlockedPath() =>
-          Logger.debug(s"Blocked request for ${request.path} as it matches $isBlockedPath")
-          None
-        case isNotBlockedPath => super.onRouteRequest(request)
-      }
+      case Some(isBlockedPath) =>
+        request.path match {
+          case isBlockedPath() =>
+            Logger.debug(s"Blocked request for ${request.path} as it matches $isBlockedPath")
+            None
+          case isNotBlockedPath => super.onRouteRequest(request)
+        }
       case None => super.onRouteRequest(request)
     }
   }
