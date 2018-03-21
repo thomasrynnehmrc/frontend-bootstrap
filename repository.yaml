@@ -1,0 +1,11 @@
+leakDetectionExemptions:
+ - ruleId: 'play_crypto_secret'
+   filePaths:
+      - '/src/main/resources/common.conf'
+ - ruleId: 'sso_encryption_key'
+   filePaths:
+      - '/src/main/resources/common.conf'
+ - ruleId: 'cookie_deviceId_secret'
+   filePaths:
+      - '/src/main/resources/common.conf'
+
