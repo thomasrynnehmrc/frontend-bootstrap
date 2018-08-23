@@ -43,7 +43,7 @@ object Dependencies {
     "ch.qos.logback"     % "logback-core"              % "1.1.7",
     "uk.gov.hmrc"        %% "logback-json-logger"      % "3.1.0",
     "uk.gov.hmrc"        %% "govuk-template"           % "5.3.0",
-    "uk.gov.hmrc"        %% "play-config"              % "4.3.2",
+    "uk.gov.hmrc"        %% "play-config"              % "4.3.3",
     "uk.gov.hmrc"        %% "play-health"              % "2.1.0",
     "uk.gov.hmrc"        %% "play-ui"                  % "7.20.0",
     "com.typesafe.play"  %% "play"                     % PlayVersion.current,
