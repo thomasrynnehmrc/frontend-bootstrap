@@ -1,8 +1,10 @@
 val libName = "frontend-bootstrap"
 
 lazy val library = Project(libName, file("."))
-  .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning)
+  .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning, SbtArtifactory)
   .settings(
+    majorVersion := 10,
+    makePublicallyAvailableOnBintray := true,
     scalaVersion := "2.11.11",
     libraryDependencies ++= LibDependencies.compile ++ LibDependencies.test,
     crossScalaVersions := Seq("2.11.11"),
