@@ -3,6 +3,8 @@ frontend-bootstrap
 
 [![Build Status](https://travis-ci.org/hmrc/frontend-bootstrap.svg)](https://travis-ci.org/hmrc/frontend-bootstrap) [ ![Download](https://api.bintray.com/packages/hmrc/releases/frontend-bootstrap/images/download.svg) ](https://bintray.com/hmrc/releases/frontend-bootstrap/_latestVersion)
 
+## This library is in maintanance mode and users should migrate to bootstrap-play-{25,26}
+
 This library implements a basic Play Global object and related functionality for frontend applications.
 
 ### Creating a Global object for your frontend application
