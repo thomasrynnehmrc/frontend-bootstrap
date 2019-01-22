@@ -21,7 +21,7 @@ object LibDependencies {
     "uk.gov.hmrc"                        %% "logback-json-logger"      % "4.1.0",
     "uk.gov.hmrc"                        %% "govuk-template"           % "5.26.0-play-25",
     "uk.gov.hmrc"                        %% "play-config"              % "7.2.0",
-    "uk.gov.hmrc"                        %% "play-health"              % "3.9.0-play-25",
+    "uk.gov.hmrc"                        %% "play-health"              % "3.10.0-play-25",
     "uk.gov.hmrc"                        %% "play-ui"                  % "7.27.0-play-25",
     "com.typesafe.play"                  %% "play"                     % PlayVersion.current,
     "com.ning"                           % "async-http-client"         % "1.8.15",
