@@ -18,6 +18,7 @@ package uk.gov.hmrc.play.frontend.binders
 
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpecLike}
+import play.api.{Environment, Mode}
 import uk.gov.hmrc.play.frontend.binders.RedirectUrl._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -60,6 +61,21 @@ class RedirectUrlBinderSpec extends WordSpecLike with Matchers with ScalaFutures
       "Provided URL [http://www.test2.com] doesn't comply with redirect policy")
     new RedirectUrl("/test").getEither(policy) shouldBe Left("Provided URL [/test] doesn't comply with redirect policy")
   }
+
+  "Should allow to match all url's if run mode is Dev" in {
+
+    val policyDev = PermitAllOnDev(Environment.simple(mode = Mode.Dev))
+
+    new RedirectUrl("http://www.google.com").get(policyDev) shouldBe SafeRedirectUrl("http://www.google.com")
+    new RedirectUrl("/test").get(policyDev) shouldBe SafeRedirectUrl("/test")
+    new RedirectUrl("http://www.google.com").getEither(policyDev) shouldBe Right(SafeRedirectUrl("http://www.google.com"))
+    new RedirectUrl("/test").getEither(policyDev) shouldBe Right(SafeRedirectUrl("/test"))
+
+    val policyTest = PermitAllOnDev(Environment.simple(mode = Mode.Test))
+
+    new RedirectUrl("http://www.google.com").getEither(policyTest) shouldBe Left("Provided URL [http://www.google.com] doesn't comply with redirect policy")
+    new RedirectUrl("/test").getEither(policyTest) shouldBe Left("Provided URL [/test] doesn't comply with redirect policy")
+    }
 
   "It should be possible to combine multiple policies" in {
     val policy = OnlyRelative | AbsoluteWithHostnameFromWhitelist(Set("www.test1.com"))
